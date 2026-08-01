@@ -1,0 +1,73 @@
+@model VehicleSearchResultViewModel
+@{
+    ViewData["Title"] = "Tìm xe cho thuê";
+    var filter = Model.Filter;
+}
+
+<h2 class="mb-4">Tìm xe cho thuê</h2>
+
+<form asp-controller="Vehicle" asp-action="Index" method="get" class="row g-3 mb-4 align-items-end">
+    <div class="col-md-3">
+        <label class="form-label">Khu vực</label>
+        <input type="text" name="KhuVuc" value="@filter.KhuVuc" class="form-control" placeholder="VD: Cầu Giấy, Hà Nội" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Loại xe</label>
+        <input type="text" name="LoaiXe" value="@filter.LoaiXe" class="form-control" placeholder="VD: Sedan, Xe ga..." />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Giá từ (VNĐ)</label>
+        <input type="number" name="GiaTu" value="@filter.GiaTu" class="form-control" min="0" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Giá đến (VNĐ)</label>
+        <input type="number" name="GiaDen" value="@filter.GiaDen" class="form-control" min="0" />
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+    </div>
+</form>
+
+@if (!Model.Items.Any())
+{
+    <div class="alert alert-info">Không tìm thấy xe nào phù hợp với bộ lọc.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var xe in Model.Items)
+        {
+            var anhDaiDien = xe.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? xe.HinhAnh.FirstOrDefault();
+            <div class="col">
+                <div class="card h-100">
+                    <img src="@(anhDaiDien?.DuongDanAnh ?? "/images/no-image.png")" class="card-img-top" style="height:180px;object-fit:cover;" alt="@xe.TenXe" />
+                    <div class="card-body">
+                        <span class="badge bg-secondary mb-2">@xe.LoaiXe</span>
+                        <h5 class="card-title">@xe.TenXe</h5>
+                        <p class="card-text mb-1 price-tag fs-5">@xe.GiaThueMotNgay.ToString("N0") đ<span class="text-muted fs-6 fw-normal"> / ngày</span></p>
+                        <p class="card-text text-muted mb-1">📍 @xe.KhuVuc</p>
+                        <p class="card-text text-muted small">@xe.SoChoNgoi chỗ · @xe.HopSo</p>
+                        <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@xe.Id" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (filter.TotalPages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination">
+                @for (var p = 1; p <= filter.TotalPages; p++)
+                {
+                    <li class="page-item @(p == filter.Page ? "active" : "")">
+                        <a class="page-link" asp-controller="Vehicle" asp-action="Index"
+                           asp-route-KhuVuc="@filter.KhuVuc" asp-route-LoaiXe="@filter.LoaiXe"
+                           asp-route-GiaTu="@filter.GiaTu" asp-route-GiaDen="@filter.GiaDen"
+                           asp-route-Page="@p">@p</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}

@@ -1,0 +1,179 @@
+@using System.Text.Json
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard thống kê";
+
+    var nhanThang = JsonSerializer.Serialize(Model.DoanhThuTheoThang.Select(x => x.Thang));
+    var giaTriDoanhThu = JsonSerializer.Serialize(Model.DoanhThuTheoThang.Select(x => x.DoanhThu));
+
+    var nhanTopXe = JsonSerializer.Serialize(Model.TopXeChoThue.Select(x => x.TenXe));
+    var giaTriTopXe = JsonSerializer.Serialize(Model.TopXeChoThue.Select(x => x.DoanhThu));
+}
+
+<h2 class="mb-4">Dashboard thống kê</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card text-bg-primary h-100">
+            <div class="card-body">
+                <div class="small">Tổng doanh thu</div>
+                <div class="fs-4 fw-bold">@Model.TongDoanhThu.ToString("N0") đ</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-bg-success h-100">
+            <div class="card-body">
+                <div class="small">Tỷ lệ xe đang được thuê</div>
+                <div class="fs-4 fw-bold">@Model.TyLeSuDungXe %</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-bg-warning h-100">
+            <div class="card-body">
+                <div class="small">Điểm đánh giá trung bình</div>
+                <div class="fs-4 fw-bold">★ @Model.DiemDanhGiaTrungBinh <span class="fs-6 fw-normal">(@Model.TongSoDanhGia đánh giá)</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-bg-secondary h-100">
+            <div class="card-body">
+                <div class="small">Tổng số đơn đặt xe</div>
+                <div class="fs-4 fw-bold">@Model.TongSoDon</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Doanh thu 6 tháng gần nhất</h5>
+                <canvas id="chartDoanhThu" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Trạng thái xe</h5>
+                <canvas id="chartTrangThaiXe" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Trạng thái đơn</h5>
+                <canvas id="chartTrangThaiDon" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Top 5 xe theo doanh thu</h5>
+                @if (Model.TopXeChoThue.Any())
+                {
+                    <canvas id="chartTopXe" height="220"></canvas>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Chưa có đơn nào được giao xe.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Người dùng &amp; đội xe</h5>
+                <table class="table table-sm mb-0">
+                    <tr><th>Khách thuê (Customer)</th><td>@Model.SoCustomer</td></tr>
+                    <tr><th>Chủ xe (Owner)</th><td>@Model.SoOwner</td></tr>
+                    <tr><th>Tổng người dùng</th><td>@Model.TongNguoiDung</td></tr>
+                    <tr><th>Tổng số xe</th><td>@Model.TongSoXe</td></tr>
+                    <tr><th>Xe chờ duyệt</th><td>@Model.SoXeChoDuyet</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        const mauChu = '#495057';
+
+        new Chart(document.getElementById('chartDoanhThu'), {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(nhanThang),
+                datasets: [{
+                    label: 'Doanh thu (đ)',
+                    data: @Html.Raw(giaTriDoanhThu),
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13,110,253,0.15)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { ticks: { color: mauChu, callback: v => v.toLocaleString('vi-VN') } }, x: { ticks: { color: mauChu } } }
+            }
+        });
+
+        new Chart(document.getElementById('chartTrangThaiXe'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Sẵn sàng', 'Đang thuê', 'Bảo trì', 'Chờ duyệt'],
+                datasets: [{
+                    data: [@Model.SoXeSanSang, @Model.SoXeDangThue, @Model.SoXeBaoTri, @Model.SoXeChoDuyet],
+                    backgroundColor: ['#198754', '#0d6efd', '#ffc107', '#6c757d']
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { color: mauChu, boxWidth: 12 } } } }
+        });
+
+        new Chart(document.getElementById('chartTrangThaiDon'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Chờ xác nhận', 'Đã xác nhận', 'Đang thuê', 'Hoàn thành', 'Đã huỷ'],
+                datasets: [{
+                    data: [@Model.SoDonChoXacNhan, @Model.SoDonDaXacNhan, @Model.SoDonDangThue, @Model.SoDonHoanThanh, @Model.SoDonDaHuy],
+                    backgroundColor: ['#ffc107', '#198754', '#0d6efd', '#6c757d', '#dc3545']
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { color: mauChu, boxWidth: 12 } } } }
+        });
+
+        @if (Model.TopXeChoThue.Any())
+        {
+            <text>
+            new Chart(document.getElementById('chartTopXe'), {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(nhanTopXe),
+                    datasets: [{
+                        label: 'Doanh thu (đ)',
+                        data: @Html.Raw(giaTriTopXe),
+                        backgroundColor: '#0d6efd'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { ticks: { color: mauChu, callback: v => v.toLocaleString('vi-VN') } }, y: { ticks: { color: mauChu } } }
+                }
+            });
+            </text>
+        }
+    </script>
+}

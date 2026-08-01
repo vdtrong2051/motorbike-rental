@@ -1,0 +1,61 @@
+@model BookingCreateViewModel
+@{
+    ViewData["Title"] = "Đặt xe";
+    var vehicle = ViewBag.Vehicle as Vehicle;
+    var anhDaiDien = vehicle?.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? vehicle?.HinhAnh.FirstOrDefault();
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        @if (vehicle is not null)
+        {
+            <div class="card mb-4">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="@(anhDaiDien?.DuongDanAnh ?? "/images/no-image.png")" class="img-fluid rounded-start" style="height:120px;width:100%;object-fit:cover;" />
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">@vehicle.TenXe</h5>
+                            <p class="card-text mb-0">@vehicle.KhuVuc</p>
+                            <p class="card-text price-tag fs-6">@vehicle.GiaThueMotNgay.ToString("N0") đ <span class="text-muted fw-normal">/ ngày</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <h2 class="mb-4">Chọn ngày thuê xe</h2>
+
+        <form asp-controller="Booking" asp-action="Create" method="post">
+            <input type="hidden" asp-for="VehicleId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="NgayBatDau" class="form-label"></label>
+                    <input asp-for="NgayBatDau" class="form-control" />
+                    <span asp-validation-for="NgayBatDau" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="NgayKetThuc" class="form-label"></label>
+                    <input asp-for="NgayKetThuc" class="form-control" />
+                    <span asp-validation-for="NgayKetThuc" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="GhiChu" class="form-label"></label>
+                <textarea asp-for="GhiChu" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="alert alert-info">Đơn đặt xe sẽ ở trạng thái <strong>Chờ xác nhận</strong> cho tới khi chủ xe xác nhận.</div>
+
+            <button type="submit" class="btn btn-primary">Xác nhận đặt xe</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

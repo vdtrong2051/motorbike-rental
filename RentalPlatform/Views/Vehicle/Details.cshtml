@@ -1,0 +1,125 @@
+@model Vehicle
+@{
+    ViewData["Title"] = Model.TenXe;
+    var anhSapXep = Model.HinhAnh.OrderByDescending(i => i.LaAnhDaiDien).ThenBy(i => i.ThuTu).ToList();
+}
+
+<div class="row">
+    <div class="col-md-7">
+        @if (anhSapXep.Any())
+        {
+            <div id="carouselAnhXe" class="carousel slide mb-3">
+                <div class="carousel-inner">
+                    @for (var i = 0; i < anhSapXep.Count; i++)
+                    {
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <img src="@anhSapXep[i].DuongDanAnh" class="d-block w-100" style="height:360px;object-fit:cover;" alt="@Model.TenXe" />
+                        </div>
+                    }
+                </div>
+                @if (anhSapXep.Count > 1)
+                {
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselAnhXe" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselAnhXe" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                }
+            </div>
+        }
+        else
+        {
+            <img src="/images/no-image.png" class="w-100 mb-3" style="height:360px;object-fit:cover;" alt="Chưa có ảnh" />
+        }
+    </div>
+    <div class="col-md-5">
+        <h2>@Model.TenXe</h2>
+        <h4 class="text-primary mb-2">@Model.GiaThueMotNgay.ToString("N0") đ / ngày</h4>
+        @{
+            var soLuongDanhGia = Model.DanhGia.Count;
+            var diemTrungBinh = soLuongDanhGia == 0 ? 0 : Math.Round(Model.DanhGia.Average(r => r.SoSao), 1);
+        }
+        @if (soLuongDanhGia > 0)
+        {
+            <p class="mb-3">
+                <span class="text-warning">★</span> <strong>@diemTrungBinh</strong>
+                <span class="text-muted">(@soLuongDanhGia đánh giá)</span>
+            </p>
+        }
+        else
+        {
+            <p class="text-muted mb-3">Chưa có đánh giá</p>
+        }
+
+        <table class="table table-borderless">
+            <tr><th>Loại xe</th><td>@Model.LoaiXe</td></tr>
+            <tr><th>Số chỗ ngồi</th><td>@Model.SoChoNgoi</td></tr>
+            <tr><th>Hộp số</th><td>@Model.HopSo</td></tr>
+            <tr><th>Nhiên liệu</th><td>@Model.NhienLieu</td></tr>
+            <tr><th>Năm sản xuất</th><td>@Model.Nam</td></tr>
+            <tr><th>Khu vực</th><td>@Model.KhuVuc</td></tr>
+            @if (!string.IsNullOrWhiteSpace(Model.DiaChiCuThe))
+            {
+                <tr><th>Địa chỉ</th><td>@Model.DiaChiCuThe</td></tr>
+            }
+            <tr><th>Chủ xe</th><td>@Model.Owner.HoTen</td></tr>
+        </table>
+
+        @if (!string.IsNullOrWhiteSpace(Model.MoTa))
+        {
+            <h5>Mô tả</h5>
+            <p>@Model.MoTa</p>
+        }
+
+        @if (Model.TrangThai == TrangThaiXe.SanSang)
+        {
+            @if (User.Identity is { IsAuthenticated: true })
+            {
+                @if (User.IsInRole("Customer"))
+                {
+                    <a asp-controller="Booking" asp-action="Create" asp-route-vehicleId="@Model.Id" class="btn btn-primary">Đặt xe ngay</a>
+                }
+                else
+                {
+                    <div class="alert alert-secondary">Chỉ tài khoản Khách thuê (Customer) mới có thể đặt xe.</div>
+                }
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Vehicle", new { id = Model.Id })" class="btn btn-primary">Đăng nhập để đặt xe</a>
+            }
+        }
+        else
+        {
+            <div class="alert alert-warning">Xe hiện không sẵn sàng cho thuê (@Model.TrangThai).</div>
+        }
+    </div>
+</div>
+
+@{
+    var danhSachDanhGia = Model.DanhGia.OrderByDescending(r => r.CreatedAt).ToList();
+}
+@if (danhSachDanhGia.Any())
+{
+    <hr class="my-4" />
+    <h4 class="mb-3">Đánh giá từ khách thuê (@danhSachDanhGia.Count)</h4>
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+        @foreach (var dg in danhSachDanhGia)
+        {
+            <div class="col">
+                <div class="border rounded p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong>@dg.Customer.HoTen</strong>
+                        <span class="text-warning">@(new string('★', dg.SoSao))@(new string('☆', 5 - dg.SoSao))</span>
+                    </div>
+                    <div class="text-muted small mb-2">@dg.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                    @if (!string.IsNullOrWhiteSpace(dg.NhanXet))
+                    {
+                        <p class="mb-0">@dg.NhanXet</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

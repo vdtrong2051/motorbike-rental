@@ -1,0 +1,92 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Đơn đặt xe";
+}
+
+<h2 class="mb-4">Đơn đặt xe cho các xe của tôi</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Chưa có đơn đặt xe nào cho xe của bạn.</div>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Xe</th>
+                <th>Khách thuê</th>
+                <th>Ngày nhận</th>
+                <th>Ngày trả</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var dat in Model)
+            {
+                <tr>
+                    <td>@dat.Vehicle.TenXe</td>
+                    <td>
+                        @dat.Customer.HoTen
+                        <div class="small text-muted">@dat.Customer.Email @(string.IsNullOrWhiteSpace(dat.Customer.SDT) ? "" : $"· {dat.Customer.SDT}")</div>
+                    </td>
+                    <td>@dat.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                    <td>@dat.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+                    <td class="price-tag">@dat.TongTien.ToString("N0") đ</td>
+                    <td>
+                        @{
+                            var badgeClass = dat.TrangThai switch
+                            {
+                                TrangThaiBooking.DaXacNhan => "bg-success",
+                                TrangThaiBooking.DangThue => "bg-primary",
+                                TrangThaiBooking.HoanThanh => "bg-secondary",
+                                TrangThaiBooking.DaHuy => "bg-danger",
+                                _ => "bg-warning text-dark"
+                            };
+                        }
+                        <span class="badge @badgeClass">@dat.TrangThai</span>
+                        @if (!string.IsNullOrWhiteSpace(dat.GhiChu))
+                        {
+                            <div class="small text-muted mt-1">Ghi chú: @dat.GhiChu</div>
+                        }
+                    </td>
+                    <td class="text-end">
+                        @if (dat.TrangThai == TrangThaiBooking.ChoXacNhan)
+                        {
+                            <form asp-controller="Booking" asp-action="Confirm" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@dat.Id" />
+                                <button type="submit" class="btn btn-sm btn-success">Xác nhận</button>
+                            </form>
+                        }
+                        @if (dat.TrangThai == TrangThaiBooking.DaXacNhan)
+                        {
+                            <form asp-controller="Booking" asp-action="GiaoXe" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@dat.Id" />
+                                <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Xác nhận đã giao xe cho khách?');">Giao xe</button>
+                            </form>
+                        }
+                        @if (dat.TrangThai == TrangThaiBooking.DangThue)
+                        {
+                            <form asp-controller="Booking" asp-action="NhanXe" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@dat.Id" />
+                                <button type="submit" class="btn btn-sm btn-secondary" onclick="return confirm('Xác nhận đã nhận lại xe từ khách?');">Nhận lại xe</button>
+                            </form>
+                        }
+                        @if (dat.TrangThai is TrangThaiBooking.ChoXacNhan or TrangThaiBooking.DaXacNhan)
+                        {
+                            <form asp-controller="Booking" asp-action="Cancel" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@dat.Id" />
+                                <input type="hidden" name="returnAction" value="Requests" />
+                                <input type="hidden" name="lyDo" value="Chủ xe từ chối/huỷ đơn" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Từ chối/huỷ đơn này?');">Từ chối</button>
+                            </form>
+                        }
+                        <a asp-controller="Booking" asp-action="Details" asp-route-id="@dat.Id" class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

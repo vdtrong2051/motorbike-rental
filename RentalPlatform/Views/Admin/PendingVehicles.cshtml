@@ -1,0 +1,52 @@
+@model List<Vehicle>
+@{
+    ViewData["Title"] = "Duyệt xe mới đăng";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">Xe đang chờ duyệt</h2>
+    <span class="badge bg-warning text-dark fs-6">@Model.Count hồ sơ</span>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Không có xe nào đang chờ duyệt.</div>
+}
+else
+{
+    @foreach (var xe in Model)
+    {
+        var anhDaiDien = xe.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? xe.HinhAnh.FirstOrDefault();
+        <div class="card mb-3">
+            <div class="row g-0">
+                <div class="col-md-2">
+                    <img src="@(anhDaiDien?.DuongDanAnh ?? "/images/no-image.png")" class="img-fluid rounded-start h-100" style="min-height:140px;width:100%;object-fit:cover;" />
+                </div>
+                <div class="col-md-7">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-secondary">@xe.LoaiXe</span>
+                            <span class="text-mono text-muted small">@xe.BienSo</span>
+                        </div>
+                        <h5 class="card-title mb-1">@xe.TenXe</h5>
+                        <p class="card-text mb-1 text-muted">Chủ xe: <strong class="text-dark">@xe.Owner.HoTen</strong> — @xe.Owner.Email</p>
+                        <p class="card-text mb-1 small text-muted">@xe.SoChoNgoi chỗ · @xe.HopSo · @xe.NhienLieu · SX @xe.Nam</p>
+                        <p class="card-text mb-1 small">📍 @xe.KhuVuc</p>
+                        <p class="card-text price-tag fs-5 mb-0">@xe.GiaThueMotNgay.ToString("N0") đ <span class="text-muted fs-6 fw-normal">/ ngày</span></p>
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex flex-column justify-content-center gap-2 p-3 border-start">
+                    <form asp-controller="Admin" asp-action="ApproveVehicle" method="post">
+                        <input type="hidden" name="id" value="@xe.Id" />
+                        <button type="submit" class="btn btn-success w-100">✓ Duyệt xe</button>
+                    </form>
+                    <form asp-controller="Admin" asp-action="RejectVehicle" method="post" class="d-flex flex-column gap-1">
+                        <input type="hidden" name="id" value="@xe.Id" />
+                        <input type="text" name="lyDo" class="form-control form-control-sm" placeholder="Lý do từ chối" required />
+                        <button type="submit" class="btn btn-outline-danger w-100">✕ Từ chối</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}

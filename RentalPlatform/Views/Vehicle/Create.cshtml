@@ -1,0 +1,92 @@
+@model VehicleCreateViewModel
+@{
+    ViewData["Title"] = "Đăng xe cho thuê";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4">Đăng xe cho thuê</h2>
+        <form asp-controller="Vehicle" asp-action="Create" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="TenXe" class="form-label"></label>
+                    <input asp-for="TenXe" class="form-control" placeholder="VD: Toyota Vios 2022" />
+                    <span asp-validation-for="TenXe" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="BienSo" class="form-label"></label>
+                    <input asp-for="BienSo" class="form-control" placeholder="VD: 30A-123.45" />
+                    <span asp-validation-for="BienSo" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="LoaiXe" class="form-label"></label>
+                    <input asp-for="LoaiXe" class="form-control" placeholder="VD: Sedan, SUV, Xe ga, Xe số..." />
+                    <span asp-validation-for="LoaiXe" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="HopSo" class="form-label"></label>
+                    <select asp-for="HopSo" asp-items="Html.GetEnumSelectList<HopSoXe>()" class="form-select"></select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="NhienLieu" class="form-label"></label>
+                    <select asp-for="NhienLieu" asp-items="Html.GetEnumSelectList<NhienLieuXe>()" class="form-select"></select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="SoChoNgoi" class="form-label"></label>
+                    <input asp-for="SoChoNgoi" type="number" class="form-control" />
+                    <span asp-validation-for="SoChoNgoi" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Nam" class="form-label"></label>
+                    <input asp-for="Nam" type="number" class="form-control" />
+                    <span asp-validation-for="Nam" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="GiaThueMotNgay" class="form-label"></label>
+                    <input asp-for="GiaThueMotNgay" type="number" step="1000" class="form-control" />
+                    <span asp-validation-for="GiaThueMotNgay" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="KhuVuc" class="form-label"></label>
+                    <input asp-for="KhuVuc" class="form-control" placeholder="VD: Cầu Giấy, Hà Nội" />
+                    <span asp-validation-for="KhuVuc" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DiaChiCuThe" class="form-label"></label>
+                    <input asp-for="DiaChiCuThe" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MoTa" class="form-label"></label>
+                <textarea asp-for="MoTa" class="form-control" rows="4"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ImageUrls" class="form-label"></label>
+                <textarea asp-for="ImageUrls" class="form-control" rows="4" placeholder="https://example.com/anh1.jpg&#10;https://example.com/anh2.jpg"></textarea>
+                <span asp-validation-for="ImageUrls" class="text-danger"></span>
+                <div class="form-text">Dán link ảnh, mỗi dòng 1 link. Ảnh đầu tiên sẽ là ảnh đại diện.</div>
+            </div>
+
+            <div class="alert alert-info">Xe sau khi đăng sẽ ở trạng thái <strong>Chờ duyệt</strong> và cần Admin duyệt trước khi hiển thị công khai.</div>
+
+            <button type="submit" class="btn btn-primary">Đăng xe</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

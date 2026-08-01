@@ -1,0 +1,82 @@
+@using RentalPlatform.Models.Entities
+@model ReviewCreateViewModel
+@{
+    ViewData["Title"] = "Đánh giá chuyến đi";
+    var booking = ViewBag.Booking as Booking;
+    var anhDaiDien = booking?.Vehicle.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? booking?.Vehicle.HinhAnh.FirstOrDefault();
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        @if (booking is not null)
+        {
+            <div class="card mb-4">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img src="@(anhDaiDien?.DuongDanAnh ?? "/images/no-image.png")" class="img-fluid rounded-start" style="height:120px;width:100%;object-fit:cover;" />
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">@booking.Vehicle.TenXe</h5>
+                            <p class="card-text mb-0 text-muted">
+                                @booking.NgayBatDau.ToString("dd/MM/yyyy") — @booking.NgayKetThuc.ToString("dd/MM/yyyy")
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <h2 class="mb-4">Đánh giá chuyến đi của bạn</h2>
+
+        <form asp-controller="Review" asp-action="Create" method="post">
+            <input type="hidden" asp-for="BookingId" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-4">
+                <label class="form-label d-block">Số sao</label>
+                <div class="star-rating" dir="rtl">
+                    @for (var i = 5; i >= 1; i--)
+                    {
+                        <input type="radio" id="star@(i)" name="SoSao" value="@i" checked="@(Model.SoSao == i)" />
+                        <label for="star@(i)" title="@i sao">★</label>
+                    }
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="NhanXet" class="form-label"></label>
+                <textarea asp-for="NhanXet" class="form-control" rows="4" placeholder="Chia sẻ trải nghiệm của bạn về xe và chủ xe..."></textarea>
+                <span asp-validation-for="NhanXet" class="text-danger"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+            <a asp-controller="Booking" asp-action="Details" asp-route-id="@Model.BookingId" class="btn btn-outline-secondary">Huỷ</a>
+        </form>
+    </div>
+</div>
+
+<style>
+    .star-rating {
+        display: inline-flex;
+        font-size: 2rem;
+    }
+    .star-rating input {
+        display: none;
+    }
+    .star-rating label {
+        color: #dee2e6;
+        cursor: pointer;
+        padding: 0 .1rem;
+        transition: color .15s;
+    }
+    .star-rating input:checked ~ label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #ffc107;
+    }
+</style>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

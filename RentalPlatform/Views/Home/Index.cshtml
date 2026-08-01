@@ -1,0 +1,64 @@
+@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<section class="hero">
+    <div class="hero-eyebrow">RentalPlatform · Cho thuê xe tự lái</div>
+    <h1 class="hero-title">Tìm xe.<br />Lên đường.</h1>
+    <p class="hero-lead">
+        Thuê xe máy &amp; ô tô tự lái quanh khu vực bạn, đặt cọc và ký hợp đồng điện tử
+        ngay trên nền tảng — sẵn sàng nhận xe trong hôm nay.
+    </p>
+
+    <form asp-controller="Vehicle" asp-action="Index" method="get" class="route-line">
+        <div class="route-stop">
+            <label for="heroKhuVuc">Điểm nhận xe</label>
+            <input type="text" id="heroKhuVuc" name="KhuVuc" class="form-control" placeholder="VD: Cầu Giấy, Hà Nội" />
+        </div>
+        <div class="route-stop">
+            <label for="heroLoaiXe">Loại xe</label>
+            <input type="text" id="heroLoaiXe" name="LoaiXe" class="form-control" placeholder="VD: Sedan, Xe ga..." />
+        </div>
+        <div class="route-submit">
+            <button type="submit" class="btn btn-primary btn-lg px-4">Tìm xe →</button>
+        </div>
+    </form>
+
+    @if (!(User.Identity?.IsAuthenticated ?? false))
+    {
+        <div class="mt-4">
+            <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Register">Đăng ký tài khoản</a>
+            <a class="btn btn-link" asp-controller="Account" asp-action="Login">Đã có tài khoản? Đăng nhập</a>
+        </div>
+    }
+</section>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <span class="badge bg-success mb-2">Bước 1</span>
+                <h5 class="card-title">Tìm &amp; đặt xe</h5>
+                <p class="card-text text-muted">Lọc theo khu vực, loại xe, mức giá và khoảng ngày còn trống — hệ thống tự kiểm tra trùng lịch.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <span class="badge bg-warning text-dark mb-2">Bước 2</span>
+                <h5 class="card-title">Ký hợp đồng &amp; đặt cọc</h5>
+                <p class="card-text text-muted">Chủ xe duyệt đơn, hai bên ký hợp đồng điện tử, khách đặt cọc để giữ xe.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <span class="badge bg-secondary mb-2">Bước 3</span>
+                <h5 class="card-title">Nhận xe &amp; đánh giá</h5>
+                <p class="card-text text-muted">Xác nhận giao/nhận xe đúng hẹn, thanh toán phần còn lại và để lại đánh giá sau chuyến đi.</p>
+            </div>
+        </div>
+    </div>
+</div>

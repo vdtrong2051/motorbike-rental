@@ -1,0 +1,16 @@
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<h2>Hồ sơ cá nhân</h2>
+<dl class="row">
+    <dt class="col-sm-3">Họ tên</dt>
+    <dd class="col-sm-9">@User.Identity?.Name</dd>
+
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@User.FindFirst(ClaimTypes.Email)?.Value</dd>
+
+    <dt class="col-sm-3">Vai trò</dt>
+    <dd class="col-sm-9">@User.FindFirst(ClaimTypes.Role)?.Value</dd>
+</dl>

@@ -1,0 +1,64 @@
+@model List<Booking>
+@{
+    ViewData["Title"] = "Lịch sử đặt xe";
+}
+
+<h2 class="mb-4">Lịch sử đặt xe của tôi</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Bạn chưa có đơn đặt xe nào. <a asp-controller="Vehicle" asp-action="Index">Tìm xe ngay</a>.</div>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Xe</th>
+                <th>Ngày nhận</th>
+                <th>Ngày trả</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var dat in Model)
+            {
+                <tr>
+                    <td>
+                        <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@dat.VehicleId">@dat.Vehicle.TenXe</a>
+                        <div class="small text-muted">@dat.Vehicle.KhuVuc</div>
+                    </td>
+                    <td>@dat.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                    <td>@dat.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+                    <td class="price-tag">@dat.TongTien.ToString("N0") đ</td>
+                    <td>
+                        @{
+                            var badgeClass = dat.TrangThai switch
+                            {
+                                TrangThaiBooking.DaXacNhan => "bg-success",
+                                TrangThaiBooking.DangThue => "bg-primary",
+                                TrangThaiBooking.HoanThanh => "bg-secondary",
+                                TrangThaiBooking.DaHuy => "bg-danger",
+                                _ => "bg-warning text-dark"
+                            };
+                        }
+                        <span class="badge @badgeClass">@dat.TrangThai</span>
+                    </td>
+                    <td class="text-end">
+                        <a asp-controller="Booking" asp-action="Details" asp-route-id="@dat.Id" class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                        @if (dat.TrangThai is TrangThaiBooking.ChoXacNhan or TrangThaiBooking.DaXacNhan)
+                        {
+                            <form asp-controller="Booking" asp-action="Cancel" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@dat.Id" />
+                                <input type="hidden" name="returnAction" value="MyBookings" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Huỷ đơn đặt xe này?');">Huỷ đơn</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

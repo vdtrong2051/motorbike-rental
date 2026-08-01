@@ -1,0 +1,120 @@
+@model VehicleEditViewModel
+@{
+    ViewData["Title"] = "Sửa thông tin xe";
+    var vehicle = ViewBag.Vehicle as Vehicle;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4">Sửa thông tin xe</h2>
+
+        @if (vehicle is not null && vehicle.HinhAnh.Any())
+        {
+            <h5>Ảnh hiện tại</h5>
+            <div class="row row-cols-3 g-2 mb-4">
+                @foreach (var anh in vehicle.HinhAnh.OrderByDescending(i => i.LaAnhDaiDien).ThenBy(i => i.ThuTu))
+                {
+                    <div class="col">
+                        <div class="card">
+                            <img src="@anh.DuongDanAnh" class="card-img-top" style="height:120px;object-fit:cover;" />
+                            @if (anh.LaAnhDaiDien)
+                            {
+                                <span class="badge bg-primary position-absolute m-1">Đại diện</span>
+                            }
+                            <form asp-controller="Vehicle" asp-action="DeleteImage" method="post" class="card-body p-2">
+                                <input type="hidden" name="vehicleId" value="@vehicle.Id" />
+                                <input type="hidden" name="imageId" value="@anh.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Xoá ảnh này?');">Xoá ảnh</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <form asp-controller="Vehicle" asp-action="Edit" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="row">
+                <div class="col-md-8 mb-3">
+                    <label asp-for="TenXe" class="form-label"></label>
+                    <input asp-for="TenXe" class="form-control" />
+                    <span asp-validation-for="TenXe" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Biển số (không thể sửa)</label>
+                    <input value="@Model.BienSo" class="form-control" disabled />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="LoaiXe" class="form-label"></label>
+                    <input asp-for="LoaiXe" class="form-control" placeholder="VD: Sedan, SUV, Xe ga, Xe số..." />
+                    <span asp-validation-for="LoaiXe" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="HopSo" class="form-label"></label>
+                    <select asp-for="HopSo" asp-items="Html.GetEnumSelectList<HopSoXe>()" class="form-select"></select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="NhienLieu" class="form-label"></label>
+                    <select asp-for="NhienLieu" asp-items="Html.GetEnumSelectList<NhienLieuXe>()" class="form-select"></select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label asp-for="SoChoNgoi" class="form-label"></label>
+                    <input asp-for="SoChoNgoi" type="number" class="form-control" />
+                    <span asp-validation-for="SoChoNgoi" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="Nam" class="form-label"></label>
+                    <input asp-for="Nam" type="number" class="form-control" />
+                    <span asp-validation-for="Nam" class="text-danger"></span>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label asp-for="GiaThueMotNgay" class="form-label"></label>
+                    <input asp-for="GiaThueMotNgay" type="number" step="1000" class="form-control" />
+                    <span asp-validation-for="GiaThueMotNgay" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="KhuVuc" class="form-label"></label>
+                    <input asp-for="KhuVuc" class="form-control" />
+                    <span asp-validation-for="KhuVuc" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DiaChiCuThe" class="form-label"></label>
+                    <input asp-for="DiaChiCuThe" class="form-control" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="MoTa" class="form-label"></label>
+                <textarea asp-for="MoTa" class="form-control" rows="4"></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="NewImageUrls" class="form-label"></label>
+                <textarea asp-for="NewImageUrls" class="form-control" rows="4" placeholder="https://example.com/anh1.jpg&#10;https://example.com/anh2.jpg"></textarea>
+                <span asp-validation-for="NewImageUrls" class="text-danger"></span>
+            </div>
+
+            @if (vehicle?.TrangThai == TrangThaiXe.SanSang)
+            {
+                <div class="alert alert-warning">Lưu ý: sau khi lưu, xe sẽ chuyển về trạng thái <strong>Chờ duyệt</strong> để Admin duyệt lại.</div>
+            }
+
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

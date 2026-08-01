@@ -1,0 +1,178 @@
+@model Booking
+@{
+    ViewData["Title"] = "Chi tiết đơn đặt xe";
+    var anhDaiDien = Model.Vehicle.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? Model.Vehicle.HinhAnh.FirstOrDefault();
+    var badgeClass = Model.TrangThai switch
+    {
+        TrangThaiBooking.DaXacNhan => "bg-success",
+        TrangThaiBooking.DangThue => "bg-primary",
+        TrangThaiBooking.HoanThanh => "bg-secondary",
+        TrangThaiBooking.DaHuy => "bg-danger",
+        _ => "bg-warning text-dark"
+    };
+    var currentUserId = Guid.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+    var laChuXe = Model.Vehicle.OwnerId == currentUserId;
+    var laKhach = Model.CustomerId == currentUserId;
+    var danhSachThanhToan = ViewBag.DanhSachThanhToan as List<Payment> ?? new List<Payment>();
+    var tongDaThanhToan = (decimal)ViewBag.TongDaThanhToan;
+    var tyLeDatCoc = (decimal)ViewBag.TyLeDatCoc;
+    var daDatCoc = danhSachThanhToan.Any(p => p.LoaiThanhToan == LoaiThanhToan.DatCoc);
+    var daThanhToanDu = tongDaThanhToan >= Model.TongTien;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h2 class="mb-4">Chi tiết đơn đặt xe <span class="badge @badgeClass">@Model.TrangThai</span></h2>
+
+        <div class="card mb-4">
+            <div class="row g-0">
+                <div class="col-md-4">
+                    <img src="@(anhDaiDien?.DuongDanAnh ?? "/images/no-image.png")" class="img-fluid rounded-start" style="height:140px;width:100%;object-fit:cover;" />
+                </div>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <h5 class="card-title">@Model.Vehicle.TenXe</h5>
+                        <p class="card-text mb-0">@Model.Vehicle.KhuVuc</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-borderless">
+            <tr><th>Khách thuê</th><td>@Model.Customer.HoTen — @Model.Customer.Email</td></tr>
+            <tr><th>Ngày nhận xe</th><td>@Model.NgayBatDau.ToString("dd/MM/yyyy")</td></tr>
+            <tr><th>Ngày trả xe</th><td>@Model.NgayKetThuc.ToString("dd/MM/yyyy")</td></tr>
+            <tr><th>Giá thuê/ngày (lúc đặt)</th><td class="price-tag">@Model.GiaThueMotNgayLucDat.ToString("N0") đ</td></tr>
+            <tr><th>Tổng tiền</th><td class="price-tag fs-5">@Model.TongTien.ToString("N0") đ</td></tr>
+            @if (!string.IsNullOrWhiteSpace(Model.GhiChu))
+            {
+                <tr><th>Ghi chú</th><td>@Model.GhiChu</td></tr>
+            }
+            @if (Model.TrangThai == TrangThaiBooking.DaHuy && !string.IsNullOrWhiteSpace(Model.LyDoHuy))
+            {
+                <tr><th>Lý do huỷ</th><td>@Model.LyDoHuy</td></tr>
+            }
+            <tr><th>Ngày tạo đơn</th><td>@Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td></tr>
+        </table>
+
+        @if (Model.TrangThai is TrangThaiBooking.ChoXacNhan or TrangThaiBooking.DaXacNhan)
+        {
+            <form asp-controller="Booking" asp-action="Cancel" method="post" class="mb-4">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Huỷ đơn đặt xe này?');">Huỷ đơn</button>
+            </form>
+        }
+
+        @if (Model.Contract is not null || Model.TrangThai is TrangThaiBooking.DaXacNhan or TrangThaiBooking.DangThue or TrangThaiBooking.HoanThanh)
+        {
+            <hr />
+            <h4 class="mb-3">Hợp đồng điện tử</h4>
+            @if (Model.Contract is null)
+            {
+                <div class="alert alert-secondary">Hợp đồng sẽ được tự động sinh khi chủ xe xác nhận đơn.</div>
+            }
+            else
+            {
+                <p>
+                    Số hợp đồng <strong class="text-mono">@Model.Contract.SoHopDong</strong> —
+                    Khách: @(Model.Contract.DaKyKhach ? "✅ Đã ký" : "⏳ Chưa ký") ·
+                    Chủ xe: @(Model.Contract.DaKyChuXe ? "✅ Đã ký" : "⏳ Chưa ký")
+                </p>
+                <a asp-controller="Contract" asp-action="Details" asp-route-bookingId="@Model.Id" class="btn btn-outline-primary mb-3">Xem / Ký hợp đồng</a>
+            }
+        }
+
+        @if (Model.TrangThai is TrangThaiBooking.DaXacNhan or TrangThaiBooking.DangThue or TrangThaiBooking.HoanThanh)
+        {
+            <hr />
+            <h4 class="mb-3">Thanh toán</h4>
+            <p>Đã thanh toán: <span class="price-tag">@tongDaThanhToan.ToString("N0") đ</span> / <span class="price-tag">@Model.TongTien.ToString("N0") đ</span></p>
+            @if (danhSachThanhToan.Any())
+            {
+                <table class="table table-sm">
+                    <thead><tr><th>Loại</th><th>Phương thức</th><th>Số tiền</th><th>Mã giao dịch</th><th>Thời gian</th></tr></thead>
+                    <tbody>
+                        @foreach (var tt in danhSachThanhToan)
+                        {
+                            <tr>
+                                <td>@tt.LoaiThanhToan</td>
+                                <td>@tt.PhuongThuc</td>
+                                <td class="price-tag">@tt.SoTien.ToString("N0") đ</td>
+                                <td class="text-mono">@tt.MaGiaoDich</td>
+                                <td>@tt.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            @if (laKhach && Model.TrangThai == TrangThaiBooking.DaXacNhan && !daThanhToanDu)
+            {
+                @if (Model.Contract is null || !Model.Contract.DaKyKhach || !Model.Contract.DaKyChuXe)
+                {
+                    <div class="alert alert-info">Cả hai bên cần ký hợp đồng điện tử trước khi thanh toán.</div>
+                }
+                else if (!daDatCoc)
+                {
+                    <form asp-controller="Payment" asp-action="DatCoc" method="post" class="row g-2 align-items-end">
+                        <input type="hidden" name="BookingId" value="@Model.Id" />
+                        <div class="col-auto">
+                            <label class="form-label">Đặt cọc (@((tyLeDatCoc * 100).ToString("0"))% = <span class="price-tag">@((Model.TongTien * tyLeDatCoc).ToString("N0")) đ</span>)</label>
+                            <select name="PhuongThuc" class="form-select">
+                                @foreach (var pt in Enum.GetValues<PhuongThucThanhToan>())
+                                {
+                                    <option value="@pt">@pt</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Đặt cọc ngay (mô phỏng)</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <form asp-controller="Payment" asp-action="ThanhToanConLai" method="post" class="row g-2 align-items-end">
+                        <input type="hidden" name="BookingId" value="@Model.Id" />
+                        <div class="col-auto">
+                            <label class="form-label">Thanh toán phần còn lại (<span class="price-tag">@((Model.TongTien - tongDaThanhToan).ToString("N0")) đ</span>)</label>
+                            <select name="PhuongThuc" class="form-select">
+                                @foreach (var pt in Enum.GetValues<PhuongThucThanhToan>())
+                                {
+                                    <option value="@pt">@pt</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Thanh toán ngay (mô phỏng)</button>
+                        </div>
+                    </form>
+                }
+            }
+        }
+
+        @if (laChuXe)
+        {
+            <hr />
+            <h4 class="mb-3">Thao tác của chủ xe</h4>
+            @if (Model.TrangThai == TrangThaiBooking.DaXacNhan)
+            {
+                <form asp-controller="Booking" asp-action="GiaoXe" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận đã giao xe cho khách?');">Xác nhận giao xe</button>
+                </form>
+                @if (Model.Contract is null || !Model.Contract.DaKyKhach || !Model.Contract.DaKyChuXe || !daThanhToanDu)
+                {
+                    <div class="form-text">Chỉ giao xe được khi hợp đồng đã ký đủ 2 bên và khách đã thanh toán đủ.</div>
+                }
+            }
+            else if (Model.TrangThai == TrangThaiBooking.DangThue)
+            {
+                <form asp-controller="Booking" asp-action="NhanXe" method="post" class="d-inline">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận đã nhận lại xe từ khách?');">Xác nhận nhận lại xe</button>
+                </form>
+            }
+        }
+    </div>
+</div>
