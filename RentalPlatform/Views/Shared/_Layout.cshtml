@@ -26,11 +26,14 @@
                     @if (User.IsInRole("Owner"))
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Vehicle" asp-action="MyVehicles">Xe của tôi</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="Requests">Đơn đặt xe</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="RentalOrder" asp-action="OwnerOrders">Đơn thuê</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="OwnerPortal" asp-action="Calendar">Lịch xe</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="OwnerPortal" asp-action="Dashboard">Doanh thu</a></li>
                     }
                     @if (User.IsInRole("Customer"))
                     {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Booking" asp-action="MyBookings">Lịch sử đặt xe</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="RentalOrder" asp-action="MyOrders">Đơn thuê</a></li>
+                        <li class="nav-item"><a class="nav-link cart-link" asp-controller="Cart" asp-action="Index">Giỏ xe <span id="cartCount" class="cart-count">0</span></a></li>
                     }
                     @if (User.IsInRole("Admin"))
                     {
@@ -57,13 +60,44 @@
     </div>
 
     <footer class="site-footer">
-        <div class="container d-flex flex-wrap justify-content-between gap-2">
-            <span>&copy; @DateTime.Now.Year RentalPlatform — Đồ án Công nghệ lập trình web</span>
-            <span>Thuê xe máy &amp; ô tô tự lái</span>
+        <div class="container">
+            <div class="row gy-4">
+                <div class="col-md-6">
+                    <div class="footer-brand">
+                        <span class="footer-logo">◍</span> RENTALPLATFORM
+                    </div>
+                    <p class="footer-desc">
+                        Nền tảng kết nối chủ xe và khách thuê xe máy, ô tô tự lái —
+                        tìm xe, đặt lịch, ký hợp đồng điện tử và thanh toán ngay trên web.
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <div class="footer-heading">Điều hướng</div>
+                    <ul class="footer-links">
+                        <li><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                        <li><a asp-controller="Vehicle" asp-action="Index">Tìm xe</a></li>
+                        <li><a asp-controller="Account" asp-action="Register">Đăng ký</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="footer-divider" />
+            <div class="d-flex flex-wrap justify-content-between gap-2 footer-bottom">
+                <span>&copy; @DateTime.Now.Year RentalPlatform</span>
+                <span>Thuê xe máy &amp; ô tô tự lái</span>
+            </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @if (User.IsInRole("Customer"))
+    {
+        <script>
+            fetch('@Url.Action("Count", "Cart")')
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { if (data) document.getElementById('cartCount').textContent = data.count; })
+                .catch(() => {});
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

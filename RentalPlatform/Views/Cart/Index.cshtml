@@ -1,0 +1,64 @@
+@model CartViewModel
+@{
+    ViewData["Title"] = "Giỏ xe";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <div class="hero-eyebrow">Đơn thuê nhiều xe</div>
+        <h2 class="mb-0">Giỏ xe của bạn</h2>
+    </div>
+    <a asp-controller="Vehicle" asp-action="Index" class="btn btn-outline-primary">+ Chọn thêm xe</a>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <div class="empty-state card">
+        <div class="card-body text-center py-5">
+            <div class="display-6 mb-2">🛒</div>
+            <h4>Giỏ hàng đang trống</h4>
+            <p class="text-muted">Chọn một hoặc nhiều xe của cùng chủ để thanh toán trong một đơn.</p>
+            <a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">Tìm xe ngay</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            @foreach (var item in Model.Items)
+            {
+                <div class="card mb-3">
+                    <div class="card-body d-flex gap-3 align-items-center">
+                        <img src="@(item.AnhDaiDien ?? "/image/no-image.png")" alt="@item.TenXe" class="cart-thumb" />
+                        <div class="flex-grow-1">
+                            <span class="badge bg-secondary">@item.LoaiXe</span>
+                            <h5 class="mb-1 mt-2">@item.TenXe</h5>
+                            <div class="small text-muted">@item.BienSo · @item.KhuVuc</div>
+                            <div class="price-tag mt-1">@item.GiaThueMotNgay.ToString("N0") đ / ngày</div>
+                        </div>
+                        <form asp-action="Remove" method="post">
+                            <input type="hidden" name="vehicleId" value="@item.VehicleId" />
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Bỏ xe</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="col-lg-4">
+            <div class="card sticky-lg-top" style="top:1rem">
+                <div class="card-body">
+                    <h4>Tóm tắt giỏ</h4>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Số xe</span><strong>@Model.Items.Count</strong>
+                    </div>
+                    <p class="small text-muted">Tổng tiền chính xác được tính theo thời gian thuê của từng xe ở bước tiếp theo.</p>
+                    <a asp-controller="RentalOrder" asp-action="Checkout" class="btn btn-primary w-100">Tiếp tục điền thông tin</a>
+                    <form asp-action="Clear" method="post" class="mt-2">
+                        <button type="submit" class="btn btn-link text-danger w-100" onclick="return confirm('Làm trống giỏ hàng?')">Làm trống giỏ</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+}

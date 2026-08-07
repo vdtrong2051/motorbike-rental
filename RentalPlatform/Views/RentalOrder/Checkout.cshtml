@@ -1,0 +1,133 @@
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Thông tin thuê xe";
+}
+
+<div class="checkout-steps mb-4">
+    <span class="done">1. Giỏ xe</span><span class="active">2. Thông tin thuê</span><span>3. Xác nhận &amp; thanh toán</span>
+</div>
+
+<form asp-action="Checkout" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="hero-eyebrow">Bên thuê</div>
+                    <h3 class="mb-3">Thông tin cá nhân</h3>
+                    <div class="mb-3">
+                        <label asp-for="HoTen" class="form-label"></label>
+                        <input asp-for="HoTen" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="HoTen" class="text-danger"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" autocomplete="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label asp-for="SDT" class="form-label"></label>
+                            <input asp-for="SDT" class="form-control" autocomplete="tel" />
+                            <span asp-validation-for="SDT" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SoCCCD" class="form-label"></label>
+                            <input asp-for="SoCCCD" class="form-control" inputmode="numeric" />
+                            <span asp-validation-for="SoCCCD" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SoGPLX" class="form-label"></label>
+                            <input asp-for="SoGPLX" class="form-control" />
+                            <span asp-validation-for="SoGPLX" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label asp-for="DiaChi" class="form-label"></label>
+                        <textarea asp-for="DiaChi" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="DiaChi" class="text-danger"></span>
+                    </div>
+                    <div class="mt-3">
+                        <label asp-for="GhiChu" class="form-label"></label>
+                        <textarea asp-for="GhiChu" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="hero-eyebrow">Tài sản thuê</div>
+            <h3 class="mb-3">Xe và thời gian thuê</h3>
+            @for (var i = 0; i < Model.Items.Count; i++)
+            {
+                <div class="card mb-3 checkout-item" data-price="@Model.Items[i].GiaThueMotNgay">
+                    <div class="card-body">
+                        <input asp-for="Items[i].VehicleId" type="hidden" />
+                        <input asp-for="Items[i].TenXe" type="hidden" />
+                        <input asp-for="Items[i].BienSo" type="hidden" />
+                        <input asp-for="Items[i].LoaiXe" type="hidden" />
+                        <input asp-for="Items[i].TinhTrang" type="hidden" />
+                        <input asp-for="Items[i].GiaThueMotNgay" type="hidden" />
+                        <div class="d-flex justify-content-between gap-2 mb-3">
+                            <div>
+                                <span class="badge bg-secondary">@Model.Items[i].LoaiXe</span>
+                                <h5 class="mt-2 mb-1">@Model.Items[i].TenXe</h5>
+                                <span class="text-mono">@Model.Items[i].BienSo</span>
+                            </div>
+                            <div class="text-end">
+                                <div class="small text-muted">Tình trạng</div>
+                                <strong>@Model.Items[i].TinhTrang</strong>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label asp-for="Items[i].NgayNhanXe" class="form-label"></label>
+                                <input asp-for="Items[i].NgayNhanXe" class="form-control rental-start" type="datetime-local" />
+                                <span asp-validation-for="Items[i].NgayNhanXe" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="Items[i].NgayTraXe" class="form-label"></label>
+                                <input asp-for="Items[i].NgayTraXe" class="form-control rental-end" type="datetime-local" />
+                                <span asp-validation-for="Items[i].NgayTraXe" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                            <span>@Model.Items[i].GiaThueMotNgay.ToString("N0") đ/ngày</span>
+                            <strong class="price-tag item-total">—</strong>
+                        </div>
+                    </div>
+                </div>
+            }
+            <div class="card border-success">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div><strong>Tạm tính toàn đơn</strong><div class="small text-muted">Tính theo mỗi 24 giờ, làm tròn lên</div></div>
+                    <div class="price-tag fs-4" id="grandTotal">—</div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Xác nhận thông tin và tạo hợp đồng</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateTotals() {
+            let grand = 0;
+            document.querySelectorAll('.checkout-item').forEach(card => {
+                const start = new Date(card.querySelector('.rental-start').value);
+                const end = new Date(card.querySelector('.rental-end').value);
+                const price = Number(card.dataset.price);
+                const valid = !isNaN(start) && !isNaN(end) && end > start;
+                const days = valid ? Math.max(1, Math.ceil((end - start) / 86400000)) : 0;
+                const total = days * price;
+                grand += total;
+                card.querySelector('.item-total').textContent = valid
+                    ? `${days} ngày · ${total.toLocaleString('vi-VN')} đ`
+                    : 'Thời gian chưa hợp lệ';
+            });
+            document.getElementById('grandTotal').textContent = `${grand.toLocaleString('vi-VN')} đ`;
+        }
+        document.querySelectorAll('.rental-start,.rental-end').forEach(el => el.addEventListener('change', updateTotals));
+        updateTotals();
+    </script>
+}

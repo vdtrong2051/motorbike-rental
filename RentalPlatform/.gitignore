@@ -1,0 +1,31 @@
+# Visual Studio / .NET build output
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Local configuration and secrets
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+.env
+.env.*
+
+# Runtime files
+logs/
+*.log
+wwwroot/uploads/
+
+# Database and IDE artifacts
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db

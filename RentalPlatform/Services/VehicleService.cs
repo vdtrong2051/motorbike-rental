@@ -18,6 +18,13 @@ public class VehicleService : IVehicleService
         if (await _repository.BienSoExistsAsync(model.BienSo))
             return VehicleOperationResult.Fail("Biển số này đã được đăng ký trên hệ thống.");
 
+        // Validate link ảnh TRƯỚC khi tạo xe trong DB. Trước đây validate diễn ra SAU khi xe
+        // đã được AddAsync xuống DB — nếu ảnh không hợp lệ, hàm trả lỗi nhưng xe đã tồn tại
+        // trong DB ở trạng thái ChoDuyet mà không có ảnh nào ("mồ côi").
+        var anhMoi = ParseImageUrls(model.ImageUrls);
+        var loi = ValidateImageUrls(anhMoi);
+        if (loi is not null) return VehicleOperationResult.Fail(loi);
+
         var vehicle = new Vehicle
         {
             OwnerId = ownerId,
@@ -35,15 +42,9 @@ public class VehicleService : IVehicleService
             TrangThai = TrangThaiXe.ChoDuyet
         };
 
+        ThemAnhXe(vehicle, anhMoi);
+
         vehicle = await _repository.AddAsync(vehicle);
-
-        if (!string.IsNullOrWhiteSpace(model.ImageUrls))
-        {
-            var (ok, error, newImages) = TaoAnhXeTuLinkAsync(vehicle, model.ImageUrls);
-            if (!ok) return VehicleOperationResult.Fail(error!);
-            await _repository.AddImagesAsync(newImages);
-        }
-
         return VehicleOperationResult.Ok(vehicle);
     }
 
@@ -52,6 +53,13 @@ public class VehicleService : IVehicleService
         var vehicle = await _repository.GetByIdAsync(model.Id);
         if (vehicle is null) return VehicleOperationResult.Fail("Không tìm thấy xe.");
         if (vehicle.OwnerId != currentUserId) return VehicleOperationResult.Fail("Bạn không có quyền sửa xe này.");
+
+        // Validate link ảnh mới TRƯỚC khi đổi bất kỳ field nào của xe — nếu ảnh không hợp lệ,
+        // trả lỗi ngay, chưa có thay đổi nào (kể cả việc xe bị đưa về ChoDuyet ở dưới)
+        // được ghi xuống DB.
+        var anhMoi = ParseImageUrls(model.NewImageUrls);
+        var loi = ValidateImageUrls(anhMoi);
+        if (loi is not null) return VehicleOperationResult.Fail(loi);
 
         vehicle.TenXe = model.TenXe;
         vehicle.LoaiXe = model.LoaiXe;
@@ -72,15 +80,12 @@ public class VehicleService : IVehicleService
             vehicle.LyDoTuChoi = null;
         }
 
+        ThemAnhXe(vehicle, anhMoi);
+
+        // Gộp cập nhật field + ảnh mới trong 1 lần SaveChanges (trước đây gọi UpdateAsync
+        // 2 lần riêng biệt — lần đầu lưu field, lần sau lưu ảnh — khiến field có thể đã
+        // commit dù ảnh sau đó lỗi).
         await _repository.UpdateAsync(vehicle);
-
-        if (!string.IsNullOrWhiteSpace(model.NewImageUrls))
-        {
-            var (ok, error, newImages) = TaoAnhXeTuLinkAsync(vehicle, model.NewImageUrls);
-            if (!ok) return VehicleOperationResult.Fail(error!);
-            await _repository.AddImagesAsync(newImages);
-        }
-
         return VehicleOperationResult.Ok(vehicle);
     }
 
@@ -92,9 +97,6 @@ public class VehicleService : IVehicleService
         if (vehicle.TrangThai == TrangThaiXe.DangThue)
             return VehicleOperationResult.Fail("Không thể xoá xe đang trong thời gian cho thuê.");
 
-        // Ảnh giờ chỉ là link ngoài (không lưu file vật lý trên server), nên không cần
-        // xoá thư mục uploads nữa. EF sẽ tự xoá các bản ghi VehicleImage liên quan qua
-        // cascade delete khi Vehicle bị xoá.
         await _repository.DeleteAsync(vehicle);
         return VehicleOperationResult.Ok(vehicle);
     }
@@ -108,7 +110,6 @@ public class VehicleService : IVehicleService
         var image = vehicle.HinhAnh.FirstOrDefault(i => i.Id == imageId);
         if (image is null) return VehicleOperationResult.Fail("Không tìm thấy ảnh.");
 
-        // Ảnh là link ngoài, không có file vật lý trên server để xoá — chỉ cần gỡ bản ghi.
         vehicle.HinhAnh.Remove(image);
         await _repository.UpdateAsync(vehicle);
         return VehicleOperationResult.Ok(vehicle);
@@ -173,51 +174,52 @@ public class VehicleService : IVehicleService
         return new VehicleSearchResultViewModel { Filter = filter, Items = items };
     }
 
-    // Tách chuỗi link (mỗi dòng 1 link) do người dùng nhập, validate định dạng URL cơ bản,
-    // và tạo các VehicleImage tương ứng. Không tải ảnh về server — chỉ lưu trực tiếp link.
-    private (bool Success, string? Error, List<VehicleImage> NewImages) TaoAnhXeTuLinkAsync(Vehicle vehicle, string rawUrls)
+    /// <summary>
+    /// Tách chuỗi nhập từ textarea (mỗi dòng 1 link) thành danh sách link ảnh, bỏ dòng trống.
+    /// </summary>
+    private static List<string> ParseImageUrls(string? raw)
     {
-        var newImages = new List<VehicleImage>();
+        if (string.IsNullOrWhiteSpace(raw)) return new List<string>();
 
-        var links = rawUrls
-            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(l => l.Trim())
-            .Where(l => l.Length > 0)
+        return raw
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(dong => dong.Trim().TrimEnd('\r'))
+            .Where(dong => dong.Length > 0)
             .ToList();
+    }
 
-        if (links.Count == 0) return (true, null, newImages);
+    private static string? ValidateImageUrls(List<string> urls)
+    {
+        foreach (var url in urls)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                return $"Link ảnh '{url}' không hợp lệ (phải bắt đầu bằng http:// hoặc https://).";
+            }
+        }
+
+        return null;
+    }
+
+    private static void ThemAnhXe(Vehicle vehicle, List<string> urls)
+    {
+        if (urls.Count == 0) return;
 
         var thuTuBatDau = vehicle.HinhAnh.Count;
         var coAnhDaiDien = vehicle.HinhAnh.Any(i => i.LaAnhDaiDien);
 
-        for (var i = 0; i < links.Count; i++)
+        var index = 0;
+        foreach (var url in urls)
         {
-            var link = links[i];
-
-            // Chỉ chấp nhận URL tuyệt đối, giao thức http/https — chặn javascript:, data:, file:...
-            // để tránh chèn link độc hại vào thuộc tính src.
-            if (!Uri.TryCreate(link, UriKind.Absolute, out var uri) ||
-                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-            {
-                return (false, $"Link '{link}' không hợp lệ. Link ảnh phải bắt đầu bằng http:// hoặc https://.", newImages);
-            }
-
-            var image = new VehicleImage
+            vehicle.HinhAnh.Add(new VehicleImage
             {
                 VehicleId = vehicle.Id,
-                DuongDanAnh = link,
-                ThuTu = thuTuBatDau + i,
-                LaAnhDaiDien = !coAnhDaiDien && i == 0
-            };
-
-            // Vẫn thêm vào vehicle.HinhAnh để object trong bộ nhớ nhất quán ngay sau khi
-            // gọi, nhưng việc LƯU vào DB được thực hiện tường minh qua
-            // repository.AddImagesAsync(newImages) — không dựa vào EF tự dò tìm entity
-            // mới qua navigation (xem giải thích trong VehicleRepository.AddImagesAsync).
-            vehicle.HinhAnh.Add(image);
-            newImages.Add(image);
+                DuongDanAnh = url,
+                ThuTu = thuTuBatDau + index,
+                LaAnhDaiDien = !coAnhDaiDien && index == 0
+            });
+            index++;
         }
-
-        return (true, null, newImages);
     }
 }

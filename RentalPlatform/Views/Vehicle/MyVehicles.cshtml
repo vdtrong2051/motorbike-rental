@@ -47,7 +47,7 @@ else
                                 _ => "bg-warning text-dark"
                             };
                         }
-                        <span class="badge @badgeClass">@xe.TrangThai</span>
+                        <span class="badge @badgeClass">@xe.TrangThai.GetDisplayName()</span>
                         @if (xe.TrangThai == TrangThaiXe.TuChoi && !string.IsNullOrWhiteSpace(xe.LyDoTuChoi))
                         {
                             <div class="small text-danger mt-1">Lý do: @xe.LyDoTuChoi</div>

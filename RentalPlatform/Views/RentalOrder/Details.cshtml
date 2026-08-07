@@ -1,0 +1,132 @@
+@model RentalOrder
+@using System.Security.Claims
+@{
+    ViewData["Title"] = $"Đơn {Model.MaDon}";
+    var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var isCustomer = Model.CustomerId == userId;
+    var isOwner = Model.OwnerId == userId;
+    var mySigned = isCustomer ? Model.Contract?.DaKyKhach == true : Model.Contract?.DaKyChuXe == true;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <div class="hero-eyebrow">Đơn thuê nhiều xe</div>
+        <h2 class="mb-1">@Model.MaDon</h2>
+        <span class="badge bg-secondary">@Model.TrangThai</span>
+        <span class="badge @(Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan ? "bg-success" : "bg-warning text-dark")">@Model.TrangThaiThanhToan</span>
+    </div>
+    <div class="text-end"><div class="small text-muted">Tổng giá trị</div><div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4>Danh sách xe (@Model.Items.Count)</h4>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr><th>Xe</th><th>Thời gian</th><th>Tình trạng</th><th class="text-end">Thành tiền</th></tr></thead>
+                        <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td><strong>@item.TenXe</strong><div class="text-mono small">@item.BienSo · @item.LoaiXe</div></td>
+                                <td>@item.NgayNhanXe.ToString("dd/MM/yyyy HH:mm")<br />→ @item.NgayTraXe.ToString("dd/MM/yyyy HH:mm")<div class="small text-muted">@item.SoNgayThue ngày</div></td>
+                                <td class="small">@item.TinhTrangLucDat</td>
+                                <td class="text-end price-tag">@item.ThanhTien.ToString("N0") đ</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        @if (Model.Contract is not null)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="mb-0">Hợp đồng <span class="text-mono fs-6">@Model.Contract.SoHopDong</span></h4>
+                        <div>
+                            <span class="badge @(Model.Contract.DaKyKhach ? "bg-success" : "bg-warning text-dark")">Khách: @(Model.Contract.DaKyKhach ? "Đã ký" : "Chưa ký")</span>
+                            <span class="badge @(Model.Contract.DaKyChuXe ? "bg-success" : "bg-warning text-dark")">Chủ xe: @(Model.Contract.DaKyChuXe ? "Đã ký" : "Chưa ký")</span>
+                        </div>
+                    </div>
+                    <details>
+                        <summary class="btn btn-outline-secondary btn-sm">Xem toàn bộ nội dung hợp đồng</summary>
+                        <pre class="contract-content mt-3">@Model.Contract.NoiDungHopDong</pre>
+                    </details>
+                    @if (!mySigned && Model.TrangThai != TrangThaiDonThue.DaHuy)
+                    {
+                        <form asp-action="Sign" method="post" class="mt-3">
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" class="btn btn-primary" onclick="return confirm('Bạn xác nhận đã đọc và đồng ý ký hợp đồng?')">Ký hợp đồng điện tử</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4>Thông tin khách thuê</h4>
+                <dl class="order-info">
+                    <dt>Họ tên</dt><dd>@Model.HoTenKhach</dd>
+                    <dt>Liên hệ</dt><dd>@Model.SDTKhach<br />@Model.EmailKhach</dd>
+                    <dt>CCCD / GPLX</dt><dd>@Model.SoCCCD<br />@Model.SoGPLX</dd>
+                    <dt>Địa chỉ</dt><dd>@Model.DiaChiKhach</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h4>Thao tác</h4>
+                @if (isOwner && Model.TrangThai == TrangThaiDonThue.ChoChuXeXacNhan)
+                {
+                    <form asp-action="Confirm" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button class="btn btn-success w-100">Xác nhận toàn bộ đơn</button>
+                    </form>
+                }
+                @if (isCustomer && Model.TrangThai is TrangThaiDonThue.DaXacNhan or TrangThaiDonThue.ChoThanhToan)
+                {
+                    <a asp-controller="OrderPayment" asp-action="Index" asp-route-orderId="@Model.Id" class="btn btn-primary w-100 mb-2">Đi đến thanh toán</a>
+                }
+                @if (isOwner && Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ChoThuTienKhiNhanXe)
+                {
+                    <form asp-action="ConfirmCash" method="post" class="mb-2">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button class="btn btn-success w-100" onclick="return confirm('Xác nhận bạn đã thu đủ tiền?')">Xác nhận đã thu tiền</button>
+                    </form>
+                }
+                @if (isOwner && Model.TrangThai == TrangThaiDonThue.DaThanhToan)
+                {
+                    <form asp-action="HandOver" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button class="btn btn-success w-100">Xác nhận giao xe</button>
+                    </form>
+                }
+                @if (isOwner && Model.TrangThai == TrangThaiDonThue.DangThue)
+                {
+                    <form asp-action="Complete" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button class="btn btn-success w-100">Xác nhận nhận lại xe</button>
+                    </form>
+                }
+                @if (Model.TrangThai is not (TrangThaiDonThue.DangThue or TrangThaiDonThue.HoanThanh or TrangThaiDonThue.DaHuy)
+                    && Model.TrangThaiThanhToan != TrangThaiThanhToanDon.DaThanhToan)
+                {
+                    <form asp-action="Cancel" method="post" class="mt-2">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <input name="reason" class="form-control form-control-sm mb-2" placeholder="Lý do huỷ" />
+                        <button class="btn btn-outline-danger w-100">Huỷ đơn</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

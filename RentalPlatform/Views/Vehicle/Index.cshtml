@@ -6,25 +6,74 @@
 
 <h2 class="mb-4">Tìm xe cho thuê</h2>
 
-<form asp-controller="Vehicle" asp-action="Index" method="get" class="row g-3 mb-4 align-items-end">
-    <div class="col-md-3">
+<form asp-controller="Vehicle" asp-action="Index" method="get" class="filter-panel mb-4">
+    <div class="row g-3 align-items-end">
+    <div class="col-lg-4">
+        <label class="form-label">Từ khoá</label>
+        <input type="search" name="TuKhoa" value="@filter.TuKhoa" class="form-control" placeholder="Tên xe, biển số, mô tả..." />
+    </div>
+    <div class="col-lg-4">
         <label class="form-label">Khu vực</label>
         <input type="text" name="KhuVuc" value="@filter.KhuVuc" class="form-control" placeholder="VD: Cầu Giấy, Hà Nội" />
     </div>
-    <div class="col-md-3">
+    <div class="col-lg-4">
         <label class="form-label">Loại xe</label>
         <input type="text" name="LoaiXe" value="@filter.LoaiXe" class="form-control" placeholder="VD: Sedan, Xe ga..." />
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label class="form-label">Giá từ (VNĐ)</label>
         <input type="number" name="GiaTu" value="@filter.GiaTu" class="form-control" min="0" />
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <label class="form-label">Giá đến (VNĐ)</label>
         <input type="number" name="GiaDen" value="@filter.GiaDen" class="form-control" min="0" />
     </div>
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+    <div class="col-md-3">
+        <label class="form-label">Hộp số</label>
+        <select name="HopSo" class="form-select">
+            <option value="">Tất cả</option>
+            @foreach (var value in Enum.GetValues<HopSoXe>())
+            {
+                <option value="@value" selected="@(filter.HopSo == value)">@value.GetDisplayName()</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Nhiên liệu</label>
+        <select name="NhienLieu" class="form-select">
+            <option value="">Tất cả</option>
+            @foreach (var value in Enum.GetValues<NhienLieuXe>())
+            {
+                <option value="@value" selected="@(filter.NhienLieu == value)">@value.GetDisplayName()</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Số chỗ tối thiểu</label>
+        <input type="number" name="SoChoNgoiToiThieu" value="@filter.SoChoNgoiToiThieu" min="1" max="16" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Nhận xe</label>
+        <input type="datetime-local" name="NgayNhanXe" value="@filter.NgayNhanXe?.ToString("yyyy-MM-ddTHH:mm")" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Trả xe</label>
+        <input type="datetime-local" name="NgayTraXe" value="@filter.NgayTraXe?.ToString("yyyy-MM-ddTHH:mm")" class="form-control" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Sắp xếp</label>
+        <select name="SapXep" class="form-select">
+            <option value="moi-nhat" selected="@(filter.SapXep == "moi-nhat")">Mới đăng</option>
+            <option value="gia-tang" selected="@(filter.SapXep == "gia-tang")">Giá thấp → cao</option>
+            <option value="gia-giam" selected="@(filter.SapXep == "gia-giam")">Giá cao → thấp</option>
+            <option value="nam-moi" selected="@(filter.SapXep == "nam-moi")">Năm sản xuất mới</option>
+            <option value="ten" selected="@(filter.SapXep == "ten")">Tên A–Z</option>
+        </select>
+    </div>
+    <div class="col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">Áp dụng bộ lọc</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Xoá</a>
+    </div>
     </div>
 </form>
 
@@ -40,14 +89,24 @@ else
             var anhDaiDien = xe.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? xe.HinhAnh.FirstOrDefault();
             <div class="col">
                 <div class="card h-100">
-                    <img src="@(anhDaiDien?.DuongDanAnh ?? "/images/no-image.png")" class="card-img-top" style="height:180px;object-fit:cover;" alt="@xe.TenXe" />
+                    <img src="@(anhDaiDien?.DuongDanAnh ?? "/image/no-image.png")" class="card-img-top" style="height:180px;object-fit:cover;" alt="@xe.TenXe" />
                     <div class="card-body">
                         <span class="badge bg-secondary mb-2">@xe.LoaiXe</span>
                         <h5 class="card-title">@xe.TenXe</h5>
                         <p class="card-text mb-1 price-tag fs-5">@xe.GiaThueMotNgay.ToString("N0") đ<span class="text-muted fs-6 fw-normal"> / ngày</span></p>
                         <p class="card-text text-muted mb-1">📍 @xe.KhuVuc</p>
                         <p class="card-text text-muted small">@xe.SoChoNgoi chỗ · @xe.HopSo</p>
-                        <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@xe.Id" class="btn btn-outline-primary btn-sm">Xem chi tiết</a>
+                        <div class="d-flex gap-2">
+                            <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@xe.Id" class="btn btn-outline-primary btn-sm">Chi tiết</a>
+                            @if (User.IsInRole("Customer"))
+                            {
+                                <form asp-controller="Cart" asp-action="Add" method="post">
+                                    <input type="hidden" name="vehicleId" value="@xe.Id" />
+                                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+                                    <button class="btn btn-primary btn-sm">+ Giỏ xe</button>
+                                </form>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -64,6 +123,10 @@ else
                         <a class="page-link" asp-controller="Vehicle" asp-action="Index"
                            asp-route-KhuVuc="@filter.KhuVuc" asp-route-LoaiXe="@filter.LoaiXe"
                            asp-route-GiaTu="@filter.GiaTu" asp-route-GiaDen="@filter.GiaDen"
+                           asp-route-TuKhoa="@filter.TuKhoa" asp-route-HopSo="@filter.HopSo"
+                           asp-route-NhienLieu="@filter.NhienLieu" asp-route-SoChoNgoiToiThieu="@filter.SoChoNgoiToiThieu"
+                           asp-route-NgayNhanXe="@filter.NgayNhanXe" asp-route-NgayTraXe="@filter.NgayTraXe"
+                           asp-route-SapXep="@filter.SapXep"
                            asp-route-Page="@p">@p</a>
                     </li>
                 }

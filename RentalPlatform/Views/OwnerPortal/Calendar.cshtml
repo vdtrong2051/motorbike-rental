@@ -1,0 +1,28 @@
+@{ ViewData["Title"] = "Lịch cho thuê xe"; }
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><div class="hero-eyebrow">Quản lý đội xe</div><h2 class="mb-0">Lịch cho thuê</h2></div>
+    <a asp-action="Dashboard" class="btn btn-outline-secondary">Dashboard doanh thu</a>
+</div>
+<div class="card"><div class="card-body"><div id="rentalCalendar"></div></div></div>
+<div class="d-flex gap-3 mt-3 small">
+    <span><i class="legend-dot" style="background:#E2A33D"></i> Chờ xác nhận</span>
+    <span><i class="legend-dot" style="background:#1F6F52"></i> Đã xác nhận</span>
+    <span><i class="legend-dot" style="background:#2F6F8F"></i> Đang thuê</span>
+</div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendar = new FullCalendar.Calendar(document.getElementById('rentalCalendar'), {
+                initialView: 'dayGridMonth',
+                locale: 'vi',
+                firstDay: 1,
+                height: 'auto',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listMonth' },
+                events: '@Url.Action("CalendarEvents")',
+                eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false }
+            });
+            calendar.render();
+        });
+    </script>
+}

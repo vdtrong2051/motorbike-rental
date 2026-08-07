@@ -9,9 +9,19 @@ using RentalPlatform.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".RentalPlatform.Cart";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.IdleTimeout = TimeSpan.FromDays(7);
+});
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Thiếu connection string DefaultConnection cho MySQL.")));
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
@@ -23,6 +33,8 @@ builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>(); // TODO: xác nhận đúng tên class
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IRentalOrderService, RentalOrderService>();
 
 // Tăng giới hạn dung lượng request để cho phép upload nhiều ảnh xe (mặc định Kestrel ~28.6MB)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
@@ -80,6 +92,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
+app.UseSession();
 
 app.UseAuthentication();
 app.UseAuthorization();

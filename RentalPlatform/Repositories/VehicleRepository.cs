@@ -42,19 +42,6 @@ public class VehicleRepository : IVehicleRepository
         await _db.SaveChangesAsync();
     }
 
-    public async Task AddImagesAsync(List<VehicleImage> images)
-    {
-        // KHÔNG thêm ảnh vào vehicle.HinhAnh (navigation của 1 entity đã tracking) rồi
-        // gọi SaveChangesAsync() suông: EF chỉ tự nhận diện "Added" cho entity mới phát
-        // hiện qua navigation nếu khoá chính đang ở giá trị mặc định (Guid.Empty). Vì
-        // VehicleImage.Id được gán Guid.NewGuid() ngay lúc khởi tạo (không phải mặc
-        // định), EF tưởng dòng đó đã tồn tại trong DB và sinh UPDATE thay vì INSERT
-        // -> khớp 0 dòng -> DbUpdateConcurrencyException. AddRange() tường minh ở đây
-        // buộc EF đánh dấu đúng trạng thái Added, bất kể Id đã có giá trị hay chưa.
-        _db.VehicleImages.AddRange(images);
-        await _db.SaveChangesAsync();
-    }
-
     public async Task DeleteAsync(Vehicle vehicle)
     {
         _db.Vehicles.Remove(vehicle);
@@ -93,6 +80,15 @@ public class VehicleRepository : IVehicleRepository
         if (filter.ChiXeSanSang)
             query = query.Where(v => v.TrangThai == TrangThaiXe.SanSang);
 
+        if (!string.IsNullOrWhiteSpace(filter.TuKhoa))
+        {
+            var keyword = filter.TuKhoa.Trim();
+            query = query.Where(v => v.TenXe.Contains(keyword)
+                || v.BienSo.Contains(keyword)
+                || v.LoaiXe.Contains(keyword)
+                || (v.MoTa != null && v.MoTa.Contains(keyword)));
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.KhuVuc))
             query = query.Where(v => v.KhuVuc.Contains(filter.KhuVuc));
 
@@ -105,13 +101,46 @@ public class VehicleRepository : IVehicleRepository
         if (filter.GiaDen.HasValue)
             query = query.Where(v => v.GiaThueMotNgay <= filter.GiaDen.Value);
 
+        if (filter.HopSo.HasValue)
+            query = query.Where(v => v.HopSo == filter.HopSo.Value);
+
+        if (filter.NhienLieu.HasValue)
+            query = query.Where(v => v.NhienLieu == filter.NhienLieu.Value);
+
+        if (filter.SoChoNgoiToiThieu.HasValue)
+            query = query.Where(v => v.SoChoNgoi >= filter.SoChoNgoiToiThieu.Value);
+
+        if (filter.NgayNhanXe.HasValue && filter.NgayTraXe.HasValue && filter.NgayTraXe > filter.NgayNhanXe)
+        {
+            var start = filter.NgayNhanXe.Value;
+            var end = filter.NgayTraXe.Value;
+            var startDate = DateOnly.FromDateTime(start);
+            var endDate = DateOnly.FromDateTime(end);
+
+            query = query.Where(v =>
+                !_db.Bookings.Any(b => b.VehicleId == v.Id
+                    && b.TrangThai != TrangThaiBooking.DaHuy
+                    && b.NgayBatDau <= endDate && b.NgayKetThuc >= startDate)
+                && !_db.RentalOrderItems.Any(i => i.VehicleId == v.Id
+                    && i.RentalOrder.TrangThai != TrangThaiDonThue.DaHuy
+                    && i.NgayNhanXe < end && i.NgayTraXe > start));
+        }
+
         var totalCount = await query.CountAsync();
 
         var page = Math.Max(filter.Page, 1);
         var pageSize = filter.PageSize <= 0 ? 9 : filter.PageSize;
 
+        query = filter.SapXep switch
+        {
+            "gia-tang" => query.OrderBy(v => v.GiaThueMotNgay),
+            "gia-giam" => query.OrderByDescending(v => v.GiaThueMotNgay),
+            "nam-moi" => query.OrderByDescending(v => v.Nam),
+            "ten" => query.OrderBy(v => v.TenXe),
+            _ => query.OrderByDescending(v => v.CreatedAt)
+        };
+
         var items = await query
-            .OrderByDescending(v => v.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

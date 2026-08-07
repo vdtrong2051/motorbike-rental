@@ -1,0 +1,45 @@
+@using System.Text.Json
+@model OwnerDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard doanh thu";
+    var labels = JsonSerializer.Serialize(Model.DoanhThu12Thang.Select(x => x.Label));
+    var values = JsonSerializer.Serialize(Model.DoanhThu12Thang.Select(x => x.Revenue));
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div><div class="hero-eyebrow">Dành cho chủ xe</div><h2 class="mb-0">Dashboard doanh thu</h2></div>
+    <a asp-action="Calendar" class="btn btn-outline-primary">Mở lịch cho thuê</a>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6"><div class="metric-card"><span>Hôm nay</span><strong>@Model.DoanhThuHomNay.ToString("N0") đ</strong></div></div>
+    <div class="col-md-3 col-6"><div class="metric-card"><span>Tháng này</span><strong>@Model.DoanhThuThangNay.ToString("N0") đ</strong></div></div>
+    <div class="col-md-3 col-6"><div class="metric-card"><span>Năm nay</span><strong>@Model.DoanhThuNamNay.ToString("N0") đ</strong></div></div>
+    <div class="col-md-3 col-6"><div class="metric-card"><span>Chờ xác nhận / Đang thuê</span><strong>@Model.DonChoXacNhan / @Model.XeDangThue</strong></div></div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card"><div class="card-body"><h4>Doanh thu 12 tháng</h4><canvas id="revenueChart" height="130"></canvas></div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card"><div class="card-body"><h4>Đơn gần đây</h4>
+            @foreach (var order in Model.DonGanDay)
+            {
+                <a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@order.Id" class="dashboard-order">
+                    <span><strong>@order.MaDon</strong><small>@order.Items.Count xe · @order.HoTenKhach</small></span>
+                    <span class="price-tag">@order.TongTien.ToString("N0") đ</span>
+                </a>
+            }
+            @if (!Model.DonGanDay.Any()) { <p class="text-muted">Chưa có dữ liệu.</p> }
+        </div></div>
+    </div>
+</div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script>
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'bar',
+            data: { labels: @Html.Raw(labels), datasets: [{ data: @Html.Raw(values), backgroundColor: '#1F6F52', borderRadius: 6 }] },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString('vi-VN') + ' đ' } } } }
+        });
+    </script>
+}

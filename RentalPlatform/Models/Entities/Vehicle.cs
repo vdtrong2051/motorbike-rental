@@ -5,15 +5,31 @@ namespace RentalPlatform.Models.Entities;
 
 public enum HopSoXe
 {
+    [Display(Name = "Số Sàn")]
     SoSan,
-    SoTuDong
+
+    [Display(Name = "Số Tự Động")]
+    SoTuDong,
+
+    [Display(Name = "Số vô cấp")]
+    SoVoCap,
+
+    [Display(Name = "Số có cấp")]
+    SoCoCap
 }
 
 public enum NhienLieuXe
 {
+    [Display(Name = "Xăng")]
     Xang,
+
+    [Display(Name = "Dầu")]
     Dau,
+
+    [Display(Name = "Điện")]
     Dien,
+
+    [Display(Name = "Hybrid")]
     Hybrid
 }
 
@@ -23,10 +39,19 @@ public enum NhienLieuXe
 // DangThue do BookingService set khi có booking được xác nhận (sẽ làm ở Sprint 3).
 public enum TrangThaiXe
 {
+    [Display(Name = "Chờ duyệt")]
     ChoDuyet,
+
+    [Display(Name = "Sẵn sàng")]
     SanSang,
+
+    [Display(Name = "Đang thuê")]
     DangThue,
+
+    [Display(Name = "Bảo trì")]
     BaoTri,
+
+    [Display(Name = "Từ chối")]
     TuChoi
 }
 

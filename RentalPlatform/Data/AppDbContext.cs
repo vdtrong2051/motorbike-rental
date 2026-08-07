@@ -14,6 +14,10 @@ public class AppDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<RentalOrder> RentalOrders => Set<RentalOrder>();
+    public DbSet<RentalOrderItem> RentalOrderItems => Set<RentalOrderItem>();
+    public DbSet<RentalOrderContract> RentalOrderContracts => Set<RentalOrderContract>();
+    public DbSet<RentalOrderPayment> RentalOrderPayments => Set<RentalOrderPayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -117,6 +121,63 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(r => r.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RentalOrder>(entity =>
+        {
+            entity.Property(o => o.TrangThai).HasConversion<string>();
+            entity.Property(o => o.PhuongThucThanhToan).HasConversion<string>();
+            entity.Property(o => o.TrangThaiThanhToan).HasConversion<string>();
+            entity.HasIndex(o => o.MaDon).IsUnique();
+            entity.HasIndex(o => new { o.CustomerId, o.CreatedAt });
+            entity.HasIndex(o => new { o.OwnerId, o.CreatedAt });
+
+            entity.HasOne(o => o.Customer)
+                .WithMany()
+                .HasForeignKey(o => o.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(o => o.Owner)
+                .WithMany()
+                .HasForeignKey(o => o.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RentalOrderItem>(entity =>
+        {
+            entity.HasIndex(i => new { i.VehicleId, i.NgayNhanXe, i.NgayTraXe });
+
+            entity.HasOne(i => i.RentalOrder)
+                .WithMany(o => o.Items)
+                .HasForeignKey(i => i.RentalOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.Vehicle)
+                .WithMany()
+                .HasForeignKey(i => i.VehicleId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RentalOrderContract>(entity =>
+        {
+            entity.HasIndex(c => c.SoHopDong).IsUnique();
+            entity.HasIndex(c => c.RentalOrderId).IsUnique();
+            entity.HasOne(c => c.RentalOrder)
+                .WithOne(o => o.Contract)
+                .HasForeignKey<RentalOrderContract>(c => c.RentalOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RentalOrderPayment>(entity =>
+        {
+            entity.Property(p => p.PhuongThuc).HasConversion<string>();
+            entity.Property(p => p.TrangThai).HasConversion<string>();
+            entity.HasIndex(p => p.MaGiaoDich).IsUnique();
+            entity.HasIndex(p => p.RentalOrderId);
+            entity.HasOne(p => p.RentalOrder)
+                .WithMany(o => o.Payments)
+                .HasForeignKey(p => p.RentalOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -1,0 +1,4 @@
+@model List<RentalOrder>
+@{ ViewData["Title"] = "Đơn thuê của tôi"; }
+<div class="d-flex justify-content-between align-items-center mb-4"><h2 class="mb-0">Đơn thuê của tôi</h2><a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">Thuê thêm xe</a></div>
+<partial name="_OrderList" model="Model" />

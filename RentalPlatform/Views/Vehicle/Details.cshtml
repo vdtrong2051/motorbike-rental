@@ -78,21 +78,25 @@
             {
                 @if (User.IsInRole("Customer"))
                 {
-                    <a asp-controller="Booking" asp-action="Create" asp-route-vehicleId="@Model.Id" class="btn btn-primary">Đặt xe ngay</a>
+                    <form asp-controller="Cart" asp-action="Add" method="post">
+                        <input type="hidden" name="vehicleId" value="@Model.Id" />
+                        <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
+                        <button class="btn btn-primary">Thêm vào giỏ xe</button>
+                    </form>
                 }
                 else
                 {
-                    <div class="alert alert-secondary">Chỉ tài khoản Khách thuê (Customer) mới có thể đặt xe.</div>
+                    <div class="alert alert-secondary">Chỉ tài khoản Khách thuê (Customer) mới có thể thêm xe vào giỏ.</div>
                 }
             }
             else
             {
-                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Vehicle", new { id = Model.Id })" class="btn btn-primary">Đăng nhập để đặt xe</a>
+                <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Vehicle", new { id = Model.Id })" class="btn btn-primary">Đăng nhập để thuê xe</a>
             }
         }
         else
         {
-            <div class="alert alert-warning">Xe hiện không sẵn sàng cho thuê (@Model.TrangThai).</div>
+            <div class="alert alert-warning">Xe hiện không sẵn sàng cho thuê (@Model.TrangThai.GetDisplayName()).</div>
         }
     </div>
 </div>

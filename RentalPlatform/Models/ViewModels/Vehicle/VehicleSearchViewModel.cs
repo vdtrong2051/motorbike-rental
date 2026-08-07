@@ -4,6 +4,8 @@ namespace RentalPlatform.Models.ViewModels.Vehicle;
 
 public class VehicleSearchViewModel
 {
+    public string? TuKhoa { get; set; }
+
     public string? KhuVuc { get; set; }
 
     public string? LoaiXe { get; set; }
@@ -11,6 +13,18 @@ public class VehicleSearchViewModel
     public decimal? GiaTu { get; set; }
 
     public decimal? GiaDen { get; set; }
+
+    public HopSoXe? HopSo { get; set; }
+
+    public NhienLieuXe? NhienLieu { get; set; }
+
+    public int? SoChoNgoiToiThieu { get; set; }
+
+    public DateTime? NgayNhanXe { get; set; }
+
+    public DateTime? NgayTraXe { get; set; }
+
+    public string SapXep { get; set; } = "moi-nhat";
 
     // Chỉ hiển thị xe TrangThai = SanSang cho khách tìm kiếm công khai.
     // Owner/Admin xem danh sách riêng (MyVehicles / PendingVehicles) nên không dùng field này.

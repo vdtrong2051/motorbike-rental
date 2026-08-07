@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.9" />
+		<PackageReference Include="MySql.EntityFrameworkCore" Version="10.0.9" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.9">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -16,6 +16,11 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Migration cũ được giữ để tham khảo nhưng không biên dịch/chạy với MySQL. -->
+		<Compile Remove="SqlServerMigrationsArchive\**\*.cs" />
 	</ItemGroup>
 
 </Project>
