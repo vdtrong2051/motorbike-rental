@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Báo cáo vi phạm";
+    var order = (RentalOrder)ViewBag.Order;
+    var reported = (User)ViewBag.ReportedUser;
+}
+<h2>Báo cáo vi phạm</h2>
+<p>Đơn <strong>@order.MaDon</strong> · Người bị báo cáo: <strong>@reported.HoTen</strong></p>
+<form method="post" class="card card-body">
+    <input type="hidden" name="orderId" value="@order.Id" />
+    <label class="form-label">Loại vi phạm</label>
+    <select name="loaiViPham" class="form-select mb-3" required>
+        <option value="">-- Chọn --</option><option>Không giao/nhận xe đúng hẹn</option><option>Xe không đúng mô tả</option>
+        <option>Gây hư hỏng xe</option><option>Gian lận thanh toán</option><option>Ứng xử không phù hợp</option><option>Khác</option>
+    </select>
+    <label class="form-label">Mô tả chi tiết</label><textarea name="moTa" class="form-control mb-3" rows="5" required maxlength="2000"></textarea>
+    <label class="form-label">Liên kết bằng chứng (nếu có)</label><input name="bangChungUrl" type="url" class="form-control mb-3" />
+    <button class="btn btn-danger">Gửi báo cáo cho Admin</button>
+</form>

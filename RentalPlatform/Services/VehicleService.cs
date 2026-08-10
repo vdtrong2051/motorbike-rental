@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.Vehicle;
 using RentalPlatform.Repositories;
@@ -8,14 +9,19 @@ namespace RentalPlatform.Services;
 public class VehicleService : IVehicleService
 {
     private readonly IVehicleRepository _repository;
+    private readonly AppDbContext _db;
 
-    public VehicleService(IVehicleRepository repository)
+    public VehicleService(IVehicleRepository repository, AppDbContext db)
     {
         _repository = repository;
+        _db = db;
     }
 
     public async Task<VehicleOperationResult> CreateAsync(VehicleCreateViewModel model, Guid ownerId)
     {
+        var owner = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == ownerId);
+        if (owner is null || !owner.DuDieuKienGiaoDich)
+            return VehicleOperationResult.Fail("Bạn phải hoàn tất hồ sơ và được Admin xác thực trước khi đăng xe.");
         if (await _repository.BienSoExistsAsync(model.BienSo))
             return VehicleOperationResult.Fail("Biển số này đã được đăng ký trên hệ thống.");
 
@@ -30,6 +36,7 @@ public class VehicleService : IVehicleService
         {
             OwnerId = ownerId,
             TenXe = model.TenXe,
+            HangXe = model.HangXe,
             LoaiXe = model.LoaiXe,
             BienSo = model.BienSo,
             SoChoNgoi = model.SoChoNgoi,
@@ -63,6 +70,7 @@ public class VehicleService : IVehicleService
         if (loi is not null) return VehicleOperationResult.Fail(loi);
 
         vehicle.TenXe = model.TenXe;
+        vehicle.HangXe = model.HangXe;
         vehicle.LoaiXe = model.LoaiXe;
         vehicle.SoChoNgoi = model.SoChoNgoi;
         vehicle.HopSo = model.HopSo;
@@ -152,6 +160,7 @@ public class VehicleService : IVehicleService
 
         vehicle.TrangThai = TrangThaiXe.SanSang;
         vehicle.LyDoTuChoi = null;
+        vehicle.ApprovedAt = DateTime.UtcNow;
         await _repository.UpdateAsync(vehicle);
         return VehicleOperationResult.Ok(vehicle);
     }

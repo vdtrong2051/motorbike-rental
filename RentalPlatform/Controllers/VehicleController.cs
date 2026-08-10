@@ -68,6 +68,7 @@ public class VehicleController : Controller
         {
             Id = vehicle.Id,
             TenXe = vehicle.TenXe,
+            HangXe = vehicle.HangXe ?? string.Empty,
             LoaiXe = vehicle.LoaiXe,
             BienSo = vehicle.BienSo,
             SoChoNgoi = vehicle.SoChoNgoi,

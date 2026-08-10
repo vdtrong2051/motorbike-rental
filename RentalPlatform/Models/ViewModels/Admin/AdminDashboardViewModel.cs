@@ -37,6 +37,11 @@ public class AdminDashboardViewModel
 
     // Doanh thu & tỷ lệ sử dụng xe (2 chỉ số Admin cần theo dõi theo use case)
     public decimal TongDoanhThu { get; set; }
+    public decimal DoanhThuHomNay { get; set; }
+    public decimal DoanhThuThangNay { get; set; }
+    public decimal DoanhThuNamNay { get; set; }
+    public decimal DoanhThuPhiDichVu { get; set; }
+    public int BaoCaoChoXuLy { get; set; }
     public double TyLeSuDungXe { get; set; } // % xe đang thuê / tổng số xe
 
     // Đánh giá
@@ -45,4 +50,5 @@ public class AdminDashboardViewModel
 
     public List<RevenueByMonthPoint> DoanhThuTheoThang { get; set; } = new();
     public List<TopVehiclePoint> TopXeChoThue { get; set; } = new();
+    public List<TopVehiclePoint> XeItDuocThue { get; set; } = new();
 }

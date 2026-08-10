@@ -236,11 +236,13 @@ public sealed class RentalContractWordService : IRentalContractWordService
         VehicleTable(x, order.Items);
 
         Heading(x, "ĐIỀU 2. GIÁ THUÊ VÀ THANH TOÁN");
-        LeadParagraph(x, "Tổng giá trị hợp đồng.", $" {order.TongTien.ToString("N0", ViCulture)} đồng (Bằng chữ: {MoneyToWords(order.TongTien)}). Mức giá đã được tính theo thời gian thuê của từng xe trong Điều 1.");
+        LeadParagraph(x, "Tổng giá trị hợp đồng.", $" {order.TongTien.ToString("N0", ViCulture)} đồng (Bằng chữ: {MoneyToWords(order.TongTien)}). Trong đó tiền thuê {order.TienThue.ToString("N0", ViCulture)} đồng, tiền đặt cọc {order.TienDatCoc.ToString("N0", ViCulture)} đồng và phí dịch vụ hệ thống {order.PhiDichVu.ToString("N0", ViCulture)} đồng.");
         var paymentMethod = order.PhuongThucThanhToan switch
         {
             PhuongThucThanhToanDon.ChuyenKhoan => "Chuyển khoản",
             PhuongThucThanhToanDon.ThanhToanKhiNhanXe => "Thanh toán khi nhận xe",
+            PhuongThucThanhToanDon.ViDienTu => "Ví điện tử",
+            PhuongThucThanhToanDon.TheThanhToan => "Thẻ thanh toán",
             _ => "Chưa lựa chọn"
         };
         LeadParagraph(x, "Phương thức.", $" {paymentMethod}. Trạng thái tại thời điểm xuất file: {PaymentStatus(order.TrangThaiThanhToan)}. Nội dung và mã tham chiếu thanh toán (nếu có): {ValueOr(order.MaThamChieuThanhToan)}.");

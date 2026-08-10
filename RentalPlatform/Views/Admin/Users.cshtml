@@ -1,0 +1,16 @@
+@model IEnumerable<User>
+@{ ViewData["Title"] = "Quản lý người dùng"; }
+<h2>Quản lý và xác thực người dùng</h2>
+<div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Người dùng</th><th>Vai trò</th><th>Hồ sơ</th><th>Xác thực</th><th>Vi phạm</th><th>Thao tác</th></tr></thead><tbody>
+@foreach (var u in Model) {
+<tr><td><strong>@u.HoTen</strong><br/><small>@u.Email · @u.SDT</small></td><td>@u.Role</td><td>@(u.HoSoDayDu ? "Đầy đủ" : "Thiếu")<br/>
+@if (!string.IsNullOrWhiteSpace(u.AnhCCCDMatTruoc)) { <a asp-action="IdentityDocument" asp-route-id="@u.Id" asp-route-side="front" target="_blank">CCCD trước</a> }
+@if (!string.IsNullOrWhiteSpace(u.AnhCCCDMatSau)) { <span> · </span><a asp-action="IdentityDocument" asp-route-id="@u.Id" asp-route-side="back" target="_blank">CCCD sau</a> }
+</td><td>@u.TrangThaiXacThuc</td><td>@u.SoLanViPham</td><td>
+@if (u.Role != UserRole.Admin) {
+<form asp-action="VerifyUser" method="post" class="d-inline"><input type="hidden" name="id" value="@u.Id"/><input type="hidden" name="approve" value="true"/><button class="btn btn-sm btn-success">Duyệt</button></form>
+<form asp-action="VerifyUser" method="post" class="d-inline"><input type="hidden" name="id" value="@u.Id"/><input type="hidden" name="approve" value="false"/><input name="note" placeholder="Lý do"/><button class="btn btn-sm btn-warning">Từ chối</button></form>
+@if (u.DangBiTamKhoa) { <form asp-action="UnlockUser" method="post" class="d-inline"><input type="hidden" name="id" value="@u.Id"/><button class="btn btn-sm btn-info">Mở khóa</button></form> }
+else { <form asp-action="LockUser" method="post" class="d-inline"><input type="hidden" name="id" value="@u.Id"/><select name="days"><option value="7">7 ngày</option><option value="30">30 ngày</option><option value="0">Vô hạn</option></select><button class="btn btn-sm btn-danger">Khóa</button></form> }
+}</td></tr> }
+</tbody></table></div>

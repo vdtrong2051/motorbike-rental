@@ -1,0 +1,5 @@
+@model IEnumerable<Vehicle>
+@{ ViewData["Title"] = "Quản lý xe"; }
+<h2>Quản lý toàn bộ xe</h2><div class="table-responsive"><table class="table align-middle"><thead><tr><th>Xe</th><th>Chủ xe</th><th>Giá/ngày</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead><tbody>
+@foreach (var v in Model) { <tr><td><strong>@v.TenXe</strong><br/>@v.HangXe · @v.BienSo</td><td>@v.Owner.HoTen<br/><small>@v.Owner.Email</small></td><td>@v.GiaThueMotNgay.ToString("N0") đ</td><td>@v.TrangThai</td><td><form asp-action="SetVehicleStatus" method="post" class="d-flex gap-1"><input type="hidden" name="id" value="@v.Id"/><select name="status" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<TrangThaiXe>()"></select><input name="note" class="form-control form-control-sm" placeholder="Lý do nếu từ chối"/><button class="btn btn-sm btn-primary">Lưu</button></form></td></tr> }
+</tbody></table></div>

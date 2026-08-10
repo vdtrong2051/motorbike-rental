@@ -1,4 +1,5 @@
 @model LoginViewModel
+@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Đăng nhập";
 }
@@ -27,6 +28,13 @@
 
             <button type="submit" class="btn btn-primary">Đăng nhập</button>
         </form>
+        @if (!string.IsNullOrWhiteSpace(Configuration["Authentication:Google:ClientId"]))
+        {
+            <div class="text-center my-3 text-muted">hoặc</div>
+            <a asp-action="GoogleLogin" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-outline-danger w-100">
+                Đăng nhập bằng Google
+            </a>
+        }
     </div>
 </div>
 

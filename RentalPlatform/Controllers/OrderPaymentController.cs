@@ -35,9 +35,13 @@ public class OrderPaymentController : Controller
     {
         var result = await _orders.SelectPaymentAsync(model.OrderId, model.PhuongThuc, CurrentUserId);
         TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
-            ? model.PhuongThuc == PhuongThucThanhToanDon.ChuyenKhoan
-                ? "Đã tạo mã QR chuyển khoản. Hệ thống đang chờ xác nhận từ cổng thanh toán."
-                : "Đã chọn thanh toán khi nhận xe."
+            ? model.PhuongThuc switch
+            {
+                PhuongThucThanhToanDon.ChuyenKhoan => "Đã tạo mã QR chuyển khoản. Hệ thống đang chờ xác nhận từ cổng thanh toán.",
+                PhuongThucThanhToanDon.ThanhToanKhiNhanXe => "Đã chọn thanh toán khi nhận xe.",
+                PhuongThucThanhToanDon.ViDienTu => "Đã tạo giao dịch ví điện tử và đang chờ cổng thanh toán xác nhận.",
+                _ => "Đã tạo giao dịch thẻ và đang chờ cổng thanh toán xác nhận."
+            }
             : result.Error;
         return RedirectToAction(nameof(Index), new { orderId = model.OrderId });
     }

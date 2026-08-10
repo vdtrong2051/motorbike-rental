@@ -11,6 +11,12 @@
 }
 
 <h2 class="mb-4">Dashboard thống kê</h2>
+<div class="row g-2 mb-3">
+    <div class="col-md-3"><div class="card card-body"><small>Hôm nay</small><strong>@Model.DoanhThuHomNay.ToString("N0") đ</strong></div></div>
+    <div class="col-md-3"><div class="card card-body"><small>Tháng này</small><strong>@Model.DoanhThuThangNay.ToString("N0") đ</strong></div></div>
+    <div class="col-md-3"><div class="card card-body"><small>Năm nay</small><strong>@Model.DoanhThuNamNay.ToString("N0") đ</strong></div></div>
+    <div class="col-md-3"><div class="card card-body"><small>Phí dịch vụ hệ thống</small><strong>@Model.DoanhThuPhiDichVu.ToString("N0") đ</strong></div></div>
+</div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-3 col-6">
@@ -101,6 +107,10 @@
                     <tr><th>Tổng số xe</th><td>@Model.TongSoXe</td></tr>
                     <tr><th>Xe chờ duyệt</th><td>@Model.SoXeChoDuyet</td></tr>
                 </table>
+                <h6 class="mt-3">Xe ít được thuê nhất</h6>
+                <ol class="small mb-0">
+                    @foreach (var xe in Model.XeItDuocThue) { <li>@xe.TenXe — @xe.SoLanThue lượt</li> }
+                </ol>
             </div>
         </div>
     </div>

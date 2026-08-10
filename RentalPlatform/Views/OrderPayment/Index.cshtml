@@ -23,6 +23,18 @@
                     <div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div>
                 </div>
 
+                <div class="row g-3 mb-4">
+                    <div class="col-md-7"><h5>Thông tin đơn thuê</h5>
+                        @foreach (var item in Model.Items) { <div class="border-bottom py-2"><strong>@item.TenXe</strong> · @item.BienSo<br/><small>@item.NgayNhanXe.ToString("dd/MM/yyyy HH:mm") → @item.NgayTraXe.ToString("dd/MM/yyyy HH:mm") (@item.SoNgayThue ngày)</small></div> }
+                    </div>
+                    <div class="col-md-5"><dl class="row small">
+                        <dt class="col-7">Tiền thuê</dt><dd class="col-5 text-end">@Model.TienThue.ToString("N0") đ</dd>
+                        <dt class="col-7">Tiền đặt cọc</dt><dd class="col-5 text-end">@Model.TienDatCoc.ToString("N0") đ</dd>
+                        <dt class="col-7">Phí dịch vụ</dt><dd class="col-5 text-end">@Model.PhiDichVu.ToString("N0") đ</dd>
+                        <dt class="col-7">Tổng thanh toán</dt><dd class="col-5 text-end fw-bold">@Model.TongTien.ToString("N0") đ</dd>
+                    </dl></div>
+                </div>
+
                 @if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
                 {
                     <div class="payment-success text-center py-4">
@@ -57,6 +69,12 @@
                         </div>
                     </div>
                 }
+                else if (Model.PhuongThucThanhToan is PhuongThucThanhToanDon.ViDienTu or PhuongThucThanhToanDon.TheThanhToan)
+                {
+                    <div class="alert alert-warning"><h5>Đang chờ cổng thanh toán</h5>
+                        Giao dịch <strong>@Model.MaThamChieuThanhToan</strong> đã được ghi nhận. Cổng ví/thẻ cần gọi webhook của hệ thống để xác nhận thanh toán.
+                    </div>
+                }
                 else if (Model.PhuongThucThanhToan == PhuongThucThanhToanDon.ThanhToanKhiNhanXe)
                 {
                     <div class="alert alert-info">
@@ -76,6 +94,18 @@
                                 <div class="fs-2">▦</div><h5>Chuyển khoản QR</h5>
                                 <p class="text-muted">Quét QR, nhận webhook và tự động cập nhật trạng thái.</p>
                                 <button class="btn btn-primary w-100">Tạo mã QR</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form asp-action="Select" method="post" class="payment-method-card">
+                                <input type="hidden" name="OrderId" value="@Model.Id" /><input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ViDienTu" />
+                                <h5>Ví điện tử</h5><p class="text-muted">Tạo giao dịch chờ xác nhận từ cổng ví điện tử.</p><button class="btn btn-outline-primary w-100">Chọn ví điện tử</button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form asp-action="Select" method="post" class="payment-method-card">
+                                <input type="hidden" name="OrderId" value="@Model.Id" /><input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.TheThanhToan" />
+                                <h5>Thẻ thanh toán</h5><p class="text-muted">Tạo giao dịch chờ xác nhận từ cổng thẻ.</p><button class="btn btn-outline-primary w-100">Chọn thẻ</button>
                             </form>
                         </div>
                         <div class="col-md-6">

@@ -2,6 +2,9 @@
 .vs/
 [Bb]in/
 [Oo]bj/
+publish/
+.nuget-packages/
+.appdata/
 *.user
 *.suo
 *.userosscache
@@ -18,6 +21,7 @@ secrets.json
 logs/
 *.log
 wwwroot/uploads/
+App_Data/
 
 # Database and IDE artifacts
 *.db

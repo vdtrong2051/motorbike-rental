@@ -164,6 +164,9 @@ namespace RentalPlatform.MySqlMigrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTime?>("ConfirmedAt")
                         .HasColumnType("datetime(6)");
 
@@ -192,6 +195,10 @@ namespace RentalPlatform.MySqlMigrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<string>("LyDoHuy")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
                     b.Property<string>("MaDon")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -206,6 +213,9 @@ namespace RentalPlatform.MySqlMigrations
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("PhiDichVu")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("PhuongThucThanhToan")
                         .HasColumnType("longtext");
@@ -225,6 +235,15 @@ namespace RentalPlatform.MySqlMigrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<decimal>("SoTienHoanDuKien")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TienDatCoc")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TienThue")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("TongTien")
                         .HasColumnType("decimal(18,2)");
 
@@ -235,6 +254,9 @@ namespace RentalPlatform.MySqlMigrations
                     b.Property<string>("TrangThaiThanhToan")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<decimal>("TyLeHoanTien")
+                        .HasColumnType("decimal(5,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -386,6 +408,10 @@ namespace RentalPlatform.MySqlMigrations
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
 
+                    b.Property<string>("GhiChuDoiSoat")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
                     b.Property<string>("MaGiaoDich")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -397,6 +423,9 @@ namespace RentalPlatform.MySqlMigrations
                     b.Property<string>("PhuongThuc")
                         .IsRequired()
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("ReconciledAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<Guid>("RentalOrderId")
                         .HasColumnType("char(36)");
@@ -455,11 +484,58 @@ namespace RentalPlatform.MySqlMigrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("RentalPlatform.Models.Entities.SystemPolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("HoanTienTrong24Gio")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("HoanTienTruoc24Gio")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("HoanTienTruoc72Gio")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("PhatTraMuonMoiGio")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("QuyDinhViPham")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<decimal>("TyLeDatCoc")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("TyLePhiDichVu")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SystemPolicies");
+                });
+
             modelBuilder.Entity("RentalPlatform.Models.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("AnhCCCDMatSau")
+                        .HasMaxLength(260)
+                        .HasColumnType("varchar(260)");
+
+                    b.Property<string>("AnhCCCDMatTruoc")
+                        .HasMaxLength(260)
+                        .HasColumnType("varchar(260)");
+
+                    b.Property<bool>("BiTamKhoa")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -473,10 +549,32 @@ namespace RentalPlatform.MySqlMigrations
                         .HasMaxLength(150)
                         .HasColumnType("varchar(150)");
 
+                    b.Property<string>("GhiChuXacThuc")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("GioiTinh")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime?>("GuiXacThucAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("HoTen")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
+
+                    b.Property<DateTime?>("NgaySinh")
+                        .HasColumnType("date");
+
+                    b.Property<string>("OAuthProvider")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
+                    b.Property<string>("OAuthSubject")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -498,9 +596,25 @@ namespace RentalPlatform.MySqlMigrations
                         .HasMaxLength(30)
                         .HasColumnType("varchar(30)");
 
+                    b.Property<int>("SoLanViPham")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("TamKhoaDen")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TrangThaiXacThuc")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("XacThucAt")
+                        .HasColumnType("datetime(6)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("OAuthProvider", "OAuthSubject")
                         .IsUnique();
 
                     b.ToTable("Users");
@@ -511,6 +625,9 @@ namespace RentalPlatform.MySqlMigrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("BienSo")
                         .IsRequired()
@@ -526,6 +643,10 @@ namespace RentalPlatform.MySqlMigrations
 
                     b.Property<decimal>("GiaThueMotNgay")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("HangXe")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("HopSo")
                         .IsRequired()
@@ -614,6 +735,66 @@ namespace RentalPlatform.MySqlMigrations
                     b.HasIndex("VehicleId");
 
                     b.ToTable("VehicleImages");
+                });
+
+            modelBuilder.Entity("RentalPlatform.Models.Entities.ViolationReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("BangChungUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("GhiChuAdmin")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("HinhThucXuLy")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("LoaiViPham")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("MoTa")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<Guid?>("RentalOrderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ReportedUserId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ReporterId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RentalOrderId");
+
+                    b.HasIndex("ReportedUserId");
+
+                    b.HasIndex("ReporterId");
+
+                    b.HasIndex("TrangThai", "CreatedAt");
+
+                    b.ToTable("ViolationReports");
                 });
 
             modelBuilder.Entity("RentalPlatform.Models.Entities.Booking", b =>
@@ -764,6 +945,32 @@ namespace RentalPlatform.MySqlMigrations
                         .IsRequired();
 
                     b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("RentalPlatform.Models.Entities.ViolationReport", b =>
+                {
+                    b.HasOne("RentalPlatform.Models.Entities.RentalOrder", "RentalOrder")
+                        .WithMany()
+                        .HasForeignKey("RentalOrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("RentalPlatform.Models.Entities.User", "ReportedUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RentalPlatform.Models.Entities.User", "Reporter")
+                        .WithMany()
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("RentalOrder");
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("Reporter");
                 });
 
             modelBuilder.Entity("RentalPlatform.Models.Entities.Booking", b =>

@@ -1,0 +1,12 @@
+@model SystemPolicy
+@{ ViewData["Title"] = "Chính sách hệ thống"; }
+<h2>Chính sách hệ thống</h2>
+<form method="post" class="card card-body"><div asp-validation-summary="All" class="text-danger"></div><div class="row g-3">
+<div class="col-md-4"><label class="form-label">Đặt cọc (%)</label><input asp-for="TyLeDatCoc" class="form-control"/></div>
+<div class="col-md-4"><label class="form-label">Phí dịch vụ (%)</label><input asp-for="TyLePhiDichVu" class="form-control"/></div>
+<div class="col-md-4"><label class="form-label">Phạt trả muộn/giờ</label><input asp-for="PhatTraMuonMoiGio" class="form-control"/></div>
+<div class="col-md-4"><label class="form-label">Hoàn trước 72 giờ (%)</label><input asp-for="HoanTienTruoc72Gio" class="form-control"/></div>
+<div class="col-md-4"><label class="form-label">Hoàn trước 24 giờ (%)</label><input asp-for="HoanTienTruoc24Gio" class="form-control"/></div>
+<div class="col-md-4"><label class="form-label">Hoàn trong 24 giờ (%)</label><input asp-for="HoanTienTrong24Gio" class="form-control"/></div>
+<div class="col-12"><label class="form-label">Quy định vi phạm</label><textarea asp-for="QuyDinhViPham" class="form-control" rows="5"></textarea></div>
+</div><button class="btn btn-primary mt-3">Lưu chính sách</button></form>

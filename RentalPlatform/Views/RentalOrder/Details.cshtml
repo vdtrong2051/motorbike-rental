@@ -137,6 +137,21 @@
                         <button class="btn btn-outline-danger w-100">Huỷ đơn</button>
                     </form>
                 }
+                @if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan && Model.TrangThai is not (TrangThaiDonThue.DangThue or TrangThaiDonThue.HoanThanh or TrangThaiDonThue.DaHuy))
+                {
+                    <form asp-action="Cancel" method="post" class="mt-2">
+                        <input type="hidden" name="id" value="@Model.Id" /><input name="reason" class="form-control form-control-sm mb-2" placeholder="Lý do huỷ" required />
+                        <button class="btn btn-outline-danger w-100">Huỷ và tính tiền hoàn theo chính sách</button>
+                    </form>
+                }
+                @if (!User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Violation" asp-action="Report" asp-route-orderId="@Model.Id" class="btn btn-outline-warning w-100 mt-2">Báo cáo bên còn lại vi phạm</a>
+                }
+                @if (Model.TrangThai == TrangThaiDonThue.DaHuy && Model.SoTienHoanDuKien > 0)
+                {
+                    <div class="alert alert-info mt-2">Hoàn dự kiến @Model.TyLeHoanTien%: <strong>@Model.SoTienHoanDuKien.ToString("N0") đ</strong></div>
+                }
             </div>
         </div>
     </div>

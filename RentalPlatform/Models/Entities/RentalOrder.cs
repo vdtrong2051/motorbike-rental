@@ -17,7 +17,9 @@ public enum TrangThaiDonThue
 public enum PhuongThucThanhToanDon
 {
     ThanhToanKhiNhanXe,
-    ChuyenKhoan
+    ChuyenKhoan,
+    ViDienTu,
+    TheThanhToan
 }
 
 public enum TrangThaiThanhToanDon
@@ -27,6 +29,7 @@ public enum TrangThaiThanhToanDon
     ChoThuTienKhiNhanXe,
     DaThanhToan,
     ThatBai,
+    ChoHoanTien,
     DaHoanTien
 }
 
@@ -77,6 +80,26 @@ public class RentalOrder
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal TongTien { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal TienThue { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal TienDatCoc { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal PhiDichVu { get; set; }
+
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal SoTienHoanDuKien { get; set; }
+
+    [Column(TypeName = "decimal(5,2)")]
+    public decimal TyLeHoanTien { get; set; }
+
+    [MaxLength(500)]
+    public string? LyDoHuy { get; set; }
+
+    public DateTime? CancelledAt { get; set; }
 
     public TrangThaiDonThue TrangThai { get; set; } = TrangThaiDonThue.ChoChuXeXacNhan;
 
@@ -211,4 +234,9 @@ public class RentalOrderPayment
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
+
+    public DateTime? ReconciledAt { get; set; }
+
+    [MaxLength(500)]
+    public string? GhiChuDoiSoat { get; set; }
 }

@@ -70,6 +70,10 @@ public class Vehicle
     [Display(Name = "Tên xe")]
     public string TenXe { get; set; } = string.Empty;
 
+    [MaxLength(100)]
+    [Display(Name = "Hãng xe")]
+    public string? HangXe { get; set; }
+
     [Required, MaxLength(50)]
     [Display(Name = "Loại xe")]
     public string LoaiXe { get; set; } = string.Empty;
@@ -118,6 +122,8 @@ public class Vehicle
     public string? LyDoTuChoi { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime? ApprovedAt { get; set; }
 
     public ICollection<VehicleImage> HinhAnh { get; set; } = new List<VehicleImage>();
 

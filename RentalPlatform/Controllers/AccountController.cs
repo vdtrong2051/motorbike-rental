@@ -53,20 +53,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.HoTen),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.Role.ToString())
-        };
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            principal,
-            new AuthenticationProperties { IsPersistent = model.RememberMe });
+        await SignInUserAsync(user, model.RememberMe);
 
         if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
             return Redirect(model.ReturnUrl);
@@ -104,6 +91,11 @@ public class AccountController : Controller
             {
                 model.Email = current.Email;
                 model.Role = current.Role;
+                model.TrangThaiXacThuc = current.TrangThaiXacThuc;
+                model.GhiChuXacThuc = current.GhiChuXacThuc;
+                model.HoSoDayDu = current.HoSoDayDu;
+                model.CoAnhCCCDMatTruoc = current.CoAnhCCCDMatTruoc;
+                model.CoAnhCCCDMatSau = current.CoAnhCCCDMatSau;
             }
             return View(model);
         }
@@ -115,7 +107,73 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Profile));
     }
 
+    [HttpGet]
+    public IActionResult GoogleLogin(string? returnUrl = null)
+    {
+        if (string.IsNullOrWhiteSpace(HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Authentication:Google:ClientId"]))
+            return RedirectToAction(nameof(Login));
+        var redirect = Url.Action(nameof(GoogleCallback), new { returnUrl });
+        return Challenge(new AuthenticationProperties { RedirectUri = redirect }, "Google");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GoogleCallback(string? returnUrl = null)
+    {
+        var result = await HttpContext.AuthenticateAsync("External");
+        if (!result.Succeeded || result.Principal is null)
+        {
+            TempData["ErrorMessage"] = "Đăng nhập Google không thành công.";
+            return RedirectToAction(nameof(Login));
+        }
+        var subject = result.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var email = result.Principal.FindFirstValue(ClaimTypes.Email);
+        var name = result.Principal.FindFirstValue(ClaimTypes.Name) ?? email;
+        var verified = result.Principal.FindFirstValue("google_email_verified");
+        if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(email) || verified != "true")
+            return RedirectToAction(nameof(Login));
+
+        var user = await _accountService.FindOrCreateExternalUserAsync("Google", subject, email, name!);
+        await HttpContext.SignOutAsync("External");
+        if (user.DangBiTamKhoa) return RedirectToAction(nameof(AccessDenied));
+        await SignInUserAsync(user, true);
+        return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? Redirect(returnUrl) : RedirectToAction("Index", "Home");
+    }
+
+    [Authorize, HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitVerification()
+    {
+        var (success, error) = await _accountService.SubmitVerificationAsync(CurrentUserId);
+        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+            ? "Hồ sơ đã được gửi cho Admin xác thực." : error;
+        return RedirectToAction(nameof(Profile));
+    }
+
+    [Authorize, HttpGet]
+    public async Task<IActionResult> IdentityDocument(string side)
+    {
+        if (side is not ("front" or "back")) return BadRequest();
+        var document = await _accountService.GetIdentityDocumentAsync(CurrentUserId, side);
+        if (document is null) return NotFound();
+        Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
+        Response.Headers.Pragma = "no-cache";
+        Response.Headers.XContentTypeOptions = "nosniff";
+        return File(document.Bytes, document.ContentType);
+    }
+
     public IActionResult AccessDenied() => View();
 
     private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    private async Task SignInUserAsync(RentalPlatform.Models.Entities.User user, bool persistent)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()), new(ClaimTypes.Name, user.HoTen),
+            new(ClaimTypes.Email, user.Email), new(ClaimTypes.Role, user.Role.ToString())
+        };
+        var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme));
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal,
+            new AuthenticationProperties { IsPersistent = persistent });
+    }
 }

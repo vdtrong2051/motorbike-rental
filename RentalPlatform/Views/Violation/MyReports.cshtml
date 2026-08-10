@@ -1,0 +1,6 @@
+@model IEnumerable<ViolationReport>
+@{ ViewData["Title"] = "Báo cáo của tôi"; }
+<h2>Báo cáo của tôi</h2>
+<div class="table-responsive"><table class="table align-middle"><thead><tr><th>Đơn</th><th>Người bị báo cáo</th><th>Vi phạm</th><th>Trạng thái</th><th>Phản hồi Admin</th></tr></thead><tbody>
+@foreach (var item in Model) { <tr><td>@item.RentalOrder?.MaDon</td><td>@item.ReportedUser.HoTen</td><td>@item.LoaiViPham<br/><small>@item.MoTa</small></td><td>@item.TrangThai</td><td>@item.GhiChuAdmin</td></tr> }
+</tbody></table></div>

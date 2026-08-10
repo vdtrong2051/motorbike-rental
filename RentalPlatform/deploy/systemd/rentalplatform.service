@@ -1,0 +1,24 @@
+[Unit]
+Description=RentalPlatform ASP.NET Core application
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rentalplatform
+Group=rentalplatform
+WorkingDirectory=/var/www/rentalplatform/current
+ExecStart=/usr/bin/dotnet /var/www/rentalplatform/current/RentalPlatform.dll
+Restart=always
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=rentalplatform
+EnvironmentFile=/etc/rentalplatform/rentalplatform.env
+Environment=DOTNET_NOLOGO=true
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/rentalplatform
+
+[Install]
+WantedBy=multi-user.target

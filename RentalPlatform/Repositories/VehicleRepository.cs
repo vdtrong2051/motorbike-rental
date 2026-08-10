@@ -89,6 +89,8 @@ public class VehicleRepository : IVehicleRepository
         {
             var keyword = filter.TuKhoa.Trim();
             query = query.Where(v => v.TenXe.Contains(keyword)
+                || (v.HangXe != null && v.HangXe.Contains(keyword))
+                || v.KhuVuc.Contains(keyword)
                 || v.BienSo.Contains(keyword)
                 || v.LoaiXe.Contains(keyword)
                 || (v.MoTa != null && v.MoTa.Contains(keyword)));
@@ -142,6 +144,8 @@ public class VehicleRepository : IVehicleRepository
             "gia-giam" => query.OrderByDescending(v => v.GiaThueMotNgay),
             "nam-moi" => query.OrderByDescending(v => v.Nam),
             "ten" => query.OrderBy(v => v.TenXe),
+            "pho-bien" => query.OrderByDescending(v => _db.RentalOrderItems.Count(i => i.VehicleId == v.Id
+                && i.RentalOrder.TrangThai != TrangThaiDonThue.DaHuy)),
             _ => query.OrderByDescending(v => v.CreatedAt)
         };
 

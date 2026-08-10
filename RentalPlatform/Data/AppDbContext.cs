@@ -18,6 +18,8 @@ public class AppDbContext : DbContext
     public DbSet<RentalOrderItem> RentalOrderItems => Set<RentalOrderItem>();
     public DbSet<RentalOrderContract> RentalOrderContracts => Set<RentalOrderContract>();
     public DbSet<RentalOrderPayment> RentalOrderPayments => Set<RentalOrderPayment>();
+    public DbSet<SystemPolicy> SystemPolicies => Set<SystemPolicy>();
+    public DbSet<ViolationReport> ViolationReports => Set<ViolationReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -27,6 +29,8 @@ public class AppDbContext : DbContext
         {
             entity.HasIndex(u => u.Email).IsUnique();
             entity.Property(u => u.Role).HasConversion<string>();
+            entity.Property(u => u.TrangThaiXacThuc).HasConversion<string>();
+            entity.HasIndex(u => new { u.OAuthProvider, u.OAuthSubject }).IsUnique();
         });
 
         modelBuilder.Entity<Vehicle>(entity =>
@@ -178,6 +182,19 @@ public class AppDbContext : DbContext
                 .WithMany(o => o.Payments)
                 .HasForeignKey(p => p.RentalOrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ViolationReport>(entity =>
+        {
+            entity.Property(r => r.TrangThai).HasConversion<string>();
+            entity.Property(r => r.HinhThucXuLy).HasConversion<string>();
+            entity.HasIndex(r => new { r.TrangThai, r.CreatedAt });
+            entity.HasOne(r => r.Reporter).WithMany().HasForeignKey(r => r.ReporterId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(r => r.ReportedUser).WithMany().HasForeignKey(r => r.ReportedUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(r => r.RentalOrder).WithMany().HasForeignKey(r => r.RentalOrderId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

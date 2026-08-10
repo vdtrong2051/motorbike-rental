@@ -12,6 +12,9 @@ public class VehicleEditViewModel
     [Display(Name = "Tên xe")]
     public string TenXe { get; set; } = string.Empty;
 
+    [Required, MaxLength(100), Display(Name = "Hãng xe")]
+    public string HangXe { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "Vui lòng nhập loại xe")]
     [MaxLength(50, ErrorMessage = "Loại xe tối đa 50 ký tự")]
     [Display(Name = "Loại xe")]

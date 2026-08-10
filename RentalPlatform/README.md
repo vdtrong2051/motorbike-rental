@@ -66,7 +66,7 @@ dotnet restore
 dotnet tool restore
 
 # 3. Cấu hình kết nối MySQL (khuyến nghị dùng biến môi trường)
-$env:ConnectionStrings__DefaultConnection = "Server=localhost;Port=3306;Database=RentalPlatformDb;User=root;Password=MAT_KHAU_MYSQL;CharSet=utf8mb4;SslMode=Preferred"
+$env:ConnectionStrings__DefaultConnection = "Server=localhost;Port=3306;Database=RentalPlatformDb;User=root;Password=MAT_KHAU_MYSQL;CharSet=utf8mb4;SslMode=Disabled"
 
 # 4. Áp migration MySQL để tạo database
 dotnet dotnet-ef database update
@@ -171,3 +171,47 @@ không yêu cầu cài Microsoft Word. Sau khi cập nhật phiên bản này, c
 
 Mẫu hợp đồng là nền tảng kỹ thuật cho dự án, không thay thế việc luật sư rà soát
 điều khoản trước khi sử dụng trong hoạt động kinh doanh thực tế.
+
+## Nâng cấp xác thực, quản trị và thanh toán
+
+Phiên bản mới bổ sung OAuth 2.0 Google, hồ sơ bắt buộc và quy trình Admin xác thực. Customer chỉ
+được checkout, Owner chỉ được đăng xe/xác nhận đơn khi hồ sơ có họ tên, email, điện thoại, CCCD,
+GPLX, địa chỉ, ngày sinh, giới tính và trạng thái `DaXacThuc`.
+
+Admin có các trang `Admin/Users`, `Admin/Policies`, `Admin/Violations`, `Admin/Payments` và
+`Admin/Dashboard` để xác thực/khóa tài khoản, đặt tỷ lệ cọc–phí dịch vụ–hoàn tiền, xử lý báo cáo,
+đối soát giao dịch và xem doanh thu ngày/tháng/năm. Customer và Owner báo cáo bên còn lại từ
+chi tiết đơn thuê. Tìm xe hỗ trợ hãng, địa điểm, lịch trống và sắp xếp theo độ phổ biến.
+
+Nâng cấp database hiện có bằng một trong hai cách:
+
+```powershell
+dotnet tool restore
+dotnet tool run dotnet-ef database update
+```
+
+Hoặc mở `database-upgrade-advanced-features.sql` trong MySQL Workbench và chạy toàn bộ script.
+
+Để bật Google OAuth, tạo OAuth Client loại Web application trong Google Cloud, thêm callback
+`https://TEN-MIEN-CUA-BAN/signin-google`, sau đó đặt hai biến môi trường
+`Authentication__Google__ClientId` và `Authentication__Google__ClientSecret`. Khi chạy localhost,
+thêm callback HTTPS đúng cổng Visual Studio, ví dụ `https://localhost:64506/signin-google`.
+
+Ví điện tử và thẻ đã có luồng tạo/ghi nhận giao dịch dùng chung webhook. Muốn thu tiền thật cần
+kết nối nhà cung cấp thanh toán và để nhà cung cấp gọi `POST /api/payments/webhook`; hệ thống không
+tự coi giao dịch là thành công nếu chưa nhận thông báo hợp lệ.
+
+## Ảnh căn cước công dân
+
+Trang hồ sơ cho phép chụp bằng camera điện thoại hoặc tải ảnh mặt trước/mặt sau CCCD. Chấp nhận
+JPG, PNG, WebP hợp lệ và giới hạn 5 MB mỗi ảnh. Ảnh được lưu ngoài `wwwroot`, không có URL công
+khai; chỉ chủ tài khoản và Admin có quyền xem qua endpoint đã xác thực. Hai ảnh là thành phần bắt
+buộc của hồ sơ trước khi gửi Admin xác thực.
+
+Mặc định ảnh nằm trong `App_Data/IdentityDocuments` (đã được gitignore). Khi triển khai Linux,
+đặt `IdentityDocuments__StoragePath=/var/lib/rentalplatform/identity-documents` và cấp quyền ghi
+thư mục này cho tài khoản chạy dịch vụ. Sau khi lấy code mới, chạy:
+
+```powershell
+dotnet tool run dotnet-ef database update
+```

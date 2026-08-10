@@ -1,0 +1,8 @@
+@model IEnumerable<ViolationReport>
+@{ ViewData["Title"] = "Xử lý vi phạm"; }
+<h2>Báo cáo vi phạm</h2>
+@foreach (var r in Model) { <div class="card mb-3"><div class="card-body"><h5>@r.LoaiViPham <span class="badge bg-secondary">@r.TrangThai</span></h5>
+<p>Người báo cáo: @r.Reporter.HoTen · Người bị báo cáo: <strong>@r.ReportedUser.HoTen</strong> · Đơn: @r.RentalOrder?.MaDon</p><p>@r.MoTa</p>
+@if (!string.IsNullOrWhiteSpace(r.BangChungUrl)) { <a href="@r.BangChungUrl" target="_blank">Xem bằng chứng</a> }
+@if (r.TrangThai is TrangThaiBaoCaoViPham.ChoXuLy or TrangThaiBaoCaoViPham.DangXuLy) { <form asp-action="ResolveViolation" method="post" class="row g-2"><input type="hidden" name="id" value="@r.Id"/><div class="col-md-3"><select name="action" class="form-select" asp-items="Html.GetEnumSelectList<HinhThucXuLyViPham>()"></select></div><div class="col-md-6"><input name="note" class="form-control" placeholder="Kết luận của Admin"/></div><div class="col-md-3"><button class="btn btn-danger">Xử lý</button><button name="reject" value="true" class="btn btn-outline-secondary">Bác báo cáo</button></div></form> }
+else { <p><strong>Kết luận:</strong> @r.GhiChuAdmin</p> }</div></div> }

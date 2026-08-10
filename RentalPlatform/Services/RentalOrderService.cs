@@ -48,6 +48,9 @@ public class RentalOrderService : IRentalOrderService
             HoTen = customer.HoTen,
             Email = customer.Email,
             SDT = customer.SDT ?? string.Empty,
+            SoCCCD = customer.SoCCCD ?? string.Empty,
+            SoGPLX = customer.SoGPLX ?? string.Empty,
+            DiaChi = customer.DiaChi ?? string.Empty,
             Items = cart.Items.Select(i => new CheckoutItemInput
             {
                 VehicleId = i.VehicleId,
@@ -62,6 +65,9 @@ public class RentalOrderService : IRentalOrderService
 
     public async Task<RentalOrderOperationResult> CreateAsync(CheckoutViewModel model, Guid customerId)
     {
+        var customer = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == customerId);
+        if (customer is null || !customer.DuDieuKienGiaoDich)
+            return new(false, "Bạn phải hoàn tất hồ sơ và được Admin xác thực trước khi thuê xe.");
         var cart = await _cart.GetAsync();
         var cartIds = cart.Items.Select(i => i.VehicleId).OrderBy(id => id).ToList();
         var inputIds = model.Items.Select(i => i.VehicleId).Distinct().OrderBy(id => id).ToList();
@@ -131,7 +137,11 @@ public class RentalOrderService : IRentalOrderService
             });
         }
 
-        order.TongTien = order.Items.Sum(i => i.ThanhTien);
+        var policy = await _db.SystemPolicies.AsNoTracking().FirstOrDefaultAsync(p => p.Id == 1) ?? new SystemPolicy();
+        order.TienThue = order.Items.Sum(i => i.ThanhTien);
+        order.TienDatCoc = Math.Round(order.TienThue * policy.TyLeDatCoc / 100, 0);
+        order.PhiDichVu = Math.Round(order.TienThue * policy.TyLePhiDichVu / 100, 0);
+        order.TongTien = order.TienThue + order.TienDatCoc + order.PhiDichVu;
         var contractNumber = $"HD-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..7].ToUpperInvariant()}";
         order.Contract = new RentalOrderContract
         {
@@ -166,6 +176,9 @@ public class RentalOrderService : IRentalOrderService
 
     public async Task<RentalOrderOperationResult> ConfirmAsync(Guid id, Guid ownerId)
     {
+        var owner = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == ownerId);
+        if (owner is null || !owner.DuDieuKienGiaoDich)
+            return new(false, "Bạn phải hoàn tất hồ sơ và được Admin xác thực trước khi nhận đơn cho thuê.");
         var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
         if (order is null || order.OwnerId != ownerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
         if (order.TrangThai != TrangThaiDonThue.ChoChuXeXacNhan) return new(false, "Đơn không ở trạng thái chờ xác nhận.");
@@ -188,8 +201,17 @@ public class RentalOrderService : IRentalOrderService
         if (order.TrangThai is TrangThaiDonThue.DangThue or TrangThaiDonThue.HoanThanh or TrangThaiDonThue.DaHuy)
             return new(false, "Không thể huỷ đơn ở trạng thái hiện tại.");
         if (order.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
-            return new(false, "Đơn đã thanh toán; cần thực hiện quy trình hoàn tiền trước khi huỷ.");
+        {
+            var cancellationPolicy = await _db.SystemPolicies.AsNoTracking().FirstOrDefaultAsync(p => p.Id == 1) ?? new SystemPolicy();
+            var hoursBeforePickup = (order.Items.Min(i => i.NgayNhanXe) - DateTime.Now).TotalHours;
+            order.TyLeHoanTien = hoursBeforePickup >= 72 ? cancellationPolicy.HoanTienTruoc72Gio
+                : hoursBeforePickup >= 24 ? cancellationPolicy.HoanTienTruoc24Gio : cancellationPolicy.HoanTienTrong24Gio;
+            order.SoTienHoanDuKien = Math.Round(order.TongTien * order.TyLeHoanTien / 100, 0);
+            order.TrangThaiThanhToan = TrangThaiThanhToanDon.ChoHoanTien;
+        }
         order.TrangThai = TrangThaiDonThue.DaHuy;
+        order.LyDoHuy = reason?.Trim();
+        order.CancelledAt = DateTime.UtcNow;
         order.GhiChu = string.Join(Environment.NewLine, new[] { order.GhiChu, $"Lý do huỷ: {reason}" }.Where(s => !string.IsNullOrWhiteSpace(s)));
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
@@ -232,9 +254,8 @@ public class RentalOrderService : IRentalOrderService
 
         order.PhuongThucThanhToan = method;
         order.TrangThai = TrangThaiDonThue.ChoThanhToan;
-        order.TrangThaiThanhToan = method == PhuongThucThanhToanDon.ChuyenKhoan
-            ? TrangThaiThanhToanDon.ChoThanhToan
-            : TrangThaiThanhToanDon.ChoThuTienKhiNhanXe;
+        order.TrangThaiThanhToan = method == PhuongThucThanhToanDon.ThanhToanKhiNhanXe
+            ? TrangThaiThanhToanDon.ChoThuTienKhiNhanXe : TrangThaiThanhToanDon.ChoThanhToan;
 
         var payment = new RentalOrderPayment
         {
@@ -409,6 +430,7 @@ public class RentalOrderService : IRentalOrderService
             sb.AppendLine($"   {item.SoNgayThue} ngày × {item.DonGiaNgay:N0} VNĐ = {item.ThanhTien:N0} VNĐ");
         }
         sb.AppendLine();
+        sb.AppendLine($"TIỀN THUÊ: {order.TienThue:N0} VNĐ · ĐẶT CỌC: {order.TienDatCoc:N0} VNĐ · PHÍ DỊCH VỤ: {order.PhiDichVu:N0} VNĐ");
         sb.AppendLine($"TỔNG GIÁ TRỊ HỢP ĐỒNG: {order.TongTien:N0} VNĐ");
         sb.AppendLine();
         sb.AppendLine("ĐIỀU KHOẢN");

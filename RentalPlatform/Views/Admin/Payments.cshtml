@@ -1,0 +1,7 @@
+@model IEnumerable<RentalOrderPayment>
+@{ ViewData["Title"] = "Quản lý thanh toán"; }
+<h2>Quản lý thanh toán</h2><div class="table-responsive"><table class="table"><thead><tr><th>Giao dịch</th><th>Đơn/khách</th><th>Phương thức</th><th>Số tiền</th><th>Trạng thái</th><th>Đối soát</th></tr></thead><tbody>
+@foreach (var p in Model) { <tr><td>@p.MaGiaoDich<br/><small>@p.CreatedAt.ToLocalTime()</small></td><td>@p.RentalOrder.MaDon<br/>@p.RentalOrder.Customer.HoTen</td><td>@p.PhuongThuc</td><td>@p.SoTien.ToString("N0") đ</td><td>@p.TrangThai<br/><small>Đơn: @p.RentalOrder.TrangThaiThanhToan</small></td><td>
+@if (p.RentalOrder.TrangThaiThanhToan == TrangThaiThanhToanDon.ChoHoanTien) { <form asp-action="ConfirmRefund" method="post"><input type="hidden" name="id" value="@p.Id"/><input name="note" placeholder="Mã hoàn tiền" required/><button class="btn btn-sm btn-warning">Xác nhận đã hoàn @p.RentalOrder.SoTienHoanDuKien.ToString("N0") đ</button></form> }
+else if (p.ReconciledAt.HasValue) { <span>@p.ReconciledAt.Value.ToLocalTime()<br/>@p.GhiChuDoiSoat</span> } else { <form asp-action="ReconcilePayment" method="post"><input type="hidden" name="id" value="@p.Id"/><input name="note" placeholder="Ghi chú"/><button class="btn btn-sm btn-primary">Đối soát</button></form> }</td></tr> }
+</tbody></table></div>

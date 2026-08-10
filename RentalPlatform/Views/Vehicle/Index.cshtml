@@ -36,6 +36,7 @@
             {
                 <option value="@value" selected="@(filter.HopSo == value)">@value.GetDisplayName()</option>
             }
+            <option value="pho-bien" selected="@(filter.SapXep == "pho-bien")">Xe phổ biến nhất</option>
         </select>
     </div>
     <div class="col-md-3">
@@ -93,6 +94,7 @@ else
                     <div class="card-body">
                         <span class="badge bg-secondary mb-2">@xe.LoaiXe</span>
                         <h5 class="card-title">@xe.TenXe</h5>
+                        <div class="small text-muted">@xe.HangXe</div>
                         <p class="card-text mb-1 price-tag fs-5">@xe.GiaThueMotNgay.ToString("N0") đ<span class="text-muted fs-6 fw-normal"> / ngày</span></p>
                         <p class="card-text text-muted mb-1">📍 @xe.KhuVuc</p>
                         <p class="card-text text-muted small">@xe.SoChoNgoi chỗ · @xe.HopSo</p>
