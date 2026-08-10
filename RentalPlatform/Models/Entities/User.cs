@@ -23,6 +23,15 @@ public class User
     [MaxLength(15)]
     public string? SDT { get; set; }
 
+    [MaxLength(20)]
+    public string? SoCCCD { get; set; }
+
+    [MaxLength(30)]
+    public string? SoGPLX { get; set; }
+
+    [MaxLength(300)]
+    public string? DiaChi { get; set; }
+
     [Required]
     public string PasswordHash { get; set; } = string.Empty;
 

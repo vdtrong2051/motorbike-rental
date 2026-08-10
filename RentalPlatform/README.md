@@ -120,6 +120,8 @@ Phiên bản này bổ sung luồng mới song song với dữ liệu `Booking` 
 - `Cart`: giỏ xe lưu trong Session, hỗ trợ nhiều xe của cùng một chủ trong một lần checkout.
 - `RentalOrder` + `RentalOrderItem`: đơn thuê tổng và từng xe, mỗi xe có thời gian nhận/trả riêng.
 - `RentalOrderContract`: hợp đồng snapshot có thông tin khách, CCCD, GPLX, địa chỉ, danh sách xe, biển số, tình trạng, thời gian và giá thuê.
+- Xuất hợp đồng Word `.docx`: mẫu A4 có thông tin hai bên, bảng nhiều xe, giá tiền bằng số/bằng chữ, 10 điều khoản, trạng thái ký điện tử và phụ lục bàn giao/hoàn trả.
+- Hồ sơ cá nhân bổ sung CCCD, GPLX và địa chỉ; thông tin chủ xe được snapshot tại thời điểm lập hợp đồng.
 - `RentalOrderPayment`: một giao dịch tổng cho toàn đơn, hỗ trợ chuyển khoản QR hoặc thanh toán khi nhận xe.
 - `OwnerPortal/Calendar`: lịch cho thuê xe theo tháng/tuần/danh sách.
 - `OwnerPortal/Dashboard`: doanh thu ngày, tháng, năm và biểu đồ 12 tháng.
@@ -159,3 +161,13 @@ Hệ thống kiểm tra secret, mã tham chiếu và đúng số tiền trước
 VietQR chỉ tạo nội dung QR; để nhận thông báo giao dịch thật cần cấu hình webhook từ
 nhà cung cấp banking/payment gateway đang sử dụng. Ở môi trường Development có nút
 mô phỏng webhook để demo toàn bộ luồng.
+
+### Tải hợp đồng Word
+
+Khách thuê, chủ xe hoặc Admin có quyền xem đơn mở `RentalOrder/Details/{id}` và
+chọn **Tải hợp đồng Word (.docx)**. File được sinh trực tiếp trên máy chủ bằng OOXML,
+không yêu cầu cài Microsoft Word. Sau khi cập nhật phiên bản này, cần chạy
+`dotnet dotnet-ef database update` để bổ sung các trường hồ sơ và snapshot chủ xe.
+
+Mẫu hợp đồng là nền tảng kỹ thuật cho dự án, không thay thế việc luật sư rà soát
+điều khoản trước khi sử dụng trong hoạt động kinh doanh thực tế.

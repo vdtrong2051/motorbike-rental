@@ -57,6 +57,17 @@
                         <summary class="btn btn-outline-secondary btn-sm">Xem toàn bộ nội dung hợp đồng</summary>
                         <pre class="contract-content mt-3">@Model.Contract.NoiDungHopDong</pre>
                     </details>
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <a asp-action="DownloadContract" asp-route-id="@Model.Id" class="btn btn-outline-primary">
+                            Tải hợp đồng Word (.docx)
+                        </a>
+                        @if (string.IsNullOrWhiteSpace(Model.Contract.SoCCCDChuXe) || string.IsNullOrWhiteSpace(Model.Contract.DiaChiChuXe))
+                        {
+                            <span class="small text-warning align-self-center">
+                                Hồ sơ chủ xe còn thiếu CCCD hoặc địa chỉ; file Word sẽ đánh dấu “Chưa cập nhật”.
+                            </span>
+                        }
+                    </div>
                     @if (!mySigned && Model.TrangThai != TrangThaiDonThue.DaHuy)
                     {
                         <form asp-action="Sign" method="post" class="mt-3">

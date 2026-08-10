@@ -161,6 +161,23 @@ public class RentalOrderContract
     [Required]
     public string NoiDungHopDong { get; set; } = string.Empty;
 
+    // Snapshot bên cho thuê tại thời điểm lập hợp đồng. Các giá trị này không đổi
+    // khi chủ xe cập nhật hồ sơ sau đó.
+    [Required, MaxLength(100)]
+    public string HoTenChuXe { get; set; } = string.Empty;
+
+    [Required, MaxLength(150)]
+    public string EmailChuXe { get; set; } = string.Empty;
+
+    [MaxLength(15)]
+    public string? SDTChuXe { get; set; }
+
+    [MaxLength(20)]
+    public string? SoCCCDChuXe { get; set; }
+
+    [MaxLength(300)]
+    public string? DiaChiChuXe { get; set; }
+
     public bool DaKyKhach { get; set; }
     public DateTime? NgayKyKhach { get; set; }
     public bool DaKyChuXe { get; set; }

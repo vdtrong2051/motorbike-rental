@@ -136,7 +136,12 @@ public class RentalOrderService : IRentalOrderService
         order.Contract = new RentalOrderContract
         {
             SoHopDong = contractNumber,
-            NoiDungHopDong = BuildContract(order, vehicles[0].Owner, contractNumber)
+            NoiDungHopDong = BuildContract(order, vehicles[0].Owner, contractNumber),
+            HoTenChuXe = vehicles[0].Owner.HoTen,
+            EmailChuXe = vehicles[0].Owner.Email,
+            SDTChuXe = vehicles[0].Owner.SDT,
+            SoCCCDChuXe = vehicles[0].Owner.SoCCCD,
+            DiaChiChuXe = vehicles[0].Owner.DiaChi
         };
 
         _db.RentalOrders.Add(order);
@@ -384,7 +389,9 @@ public class RentalOrderService : IRentalOrderService
         sb.AppendLine();
         sb.AppendLine("BÊN CHO THUÊ (BÊN A)");
         sb.AppendLine($"Họ tên: {owner.HoTen}");
+        sb.AppendLine($"CCCD/CMND: {owner.SoCCCD ?? "(chưa cập nhật)"}");
         sb.AppendLine($"Email: {owner.Email} · Điện thoại: {owner.SDT ?? "(chưa cập nhật)"}");
+        sb.AppendLine($"Địa chỉ: {owner.DiaChi ?? "(chưa cập nhật)"}");
         sb.AppendLine();
         sb.AppendLine("BÊN THUÊ (BÊN B)");
         sb.AppendLine($"Họ tên: {order.HoTenKhach}");

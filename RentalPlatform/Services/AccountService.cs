@@ -47,4 +47,35 @@ public class AccountService : IAccountService
         var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, password);
         return result == PasswordVerificationResult.Failed ? null : user;
     }
+
+    public async Task<ProfileViewModel?> GetProfileAsync(Guid userId)
+    {
+        return await _db.Users.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => new ProfileViewModel
+            {
+                HoTen = u.HoTen,
+                Email = u.Email,
+                SDT = u.SDT,
+                SoCCCD = u.SoCCCD,
+                SoGPLX = u.SoGPLX,
+                DiaChi = u.DiaChi,
+                Role = u.Role.ToString()
+            })
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<(bool Success, string? Error)> UpdateProfileAsync(Guid userId, ProfileViewModel model)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        if (user is null) return (false, "Không tìm thấy tài khoản.");
+
+        user.HoTen = model.HoTen.Trim();
+        user.SDT = string.IsNullOrWhiteSpace(model.SDT) ? null : model.SDT.Trim();
+        user.SoCCCD = string.IsNullOrWhiteSpace(model.SoCCCD) ? null : model.SoCCCD.Trim();
+        user.SoGPLX = string.IsNullOrWhiteSpace(model.SoGPLX) ? null : model.SoGPLX.Trim();
+        user.DiaChi = string.IsNullOrWhiteSpace(model.DiaChi) ? null : model.DiaChi.Trim();
+        await _db.SaveChangesAsync();
+        return (true, null);
+    }
 }

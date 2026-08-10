@@ -83,7 +83,39 @@ public class AccountController : Controller
     }
 
     [Authorize]
-    public IActionResult Profile() => View();
+    [HttpGet]
+    public async Task<IActionResult> Profile()
+    {
+        var model = await _accountService.GetProfileAsync(CurrentUserId);
+        return model is null ? NotFound() : View(model);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(ProfileViewModel model)
+    {
+        ModelState.Remove(nameof(model.Email));
+        ModelState.Remove(nameof(model.Role));
+        if (!ModelState.IsValid)
+        {
+            var current = await _accountService.GetProfileAsync(CurrentUserId);
+            if (current is not null)
+            {
+                model.Email = current.Email;
+                model.Role = current.Role;
+            }
+            return View(model);
+        }
+
+        var (success, error) = await _accountService.UpdateProfileAsync(CurrentUserId, model);
+        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+            ? "Đã cập nhật hồ sơ dùng cho hợp đồng."
+            : error;
+        return RedirectToAction(nameof(Profile));
+    }
 
     public IActionResult AccessDenied() => View();
+
+    private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 }

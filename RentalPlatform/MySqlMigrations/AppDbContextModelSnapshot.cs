@@ -266,6 +266,20 @@ namespace RentalPlatform.MySqlMigrations
                     b.Property<bool>("DaKyKhach")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("DiaChiChuXe")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("EmailChuXe")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("HoTenChuXe")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
                     b.Property<DateTime?>("NgayKyChuXe")
                         .HasColumnType("datetime(6)");
 
@@ -278,6 +292,14 @@ namespace RentalPlatform.MySqlMigrations
 
                     b.Property<Guid>("RentalOrderId")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("SDTChuXe")
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)");
+
+                    b.Property<string>("SoCCCDChuXe")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<string>("SoHopDong")
                         .IsRequired()
@@ -442,6 +464,10 @@ namespace RentalPlatform.MySqlMigrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("DiaChi")
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -463,6 +489,14 @@ namespace RentalPlatform.MySqlMigrations
                     b.Property<string>("SDT")
                         .HasMaxLength(15)
                         .HasColumnType("varchar(15)");
+
+                    b.Property<string>("SoCCCD")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("SoGPLX")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
 
                     b.HasKey("Id");
 

@@ -11,8 +11,13 @@ namespace RentalPlatform.Controllers;
 public class RentalOrderController : Controller
 {
     private readonly IRentalOrderService _orders;
+    private readonly IRentalContractWordService _contractWord;
 
-    public RentalOrderController(IRentalOrderService orders) => _orders = orders;
+    public RentalOrderController(IRentalOrderService orders, IRentalContractWordService contractWord)
+    {
+        _orders = orders;
+        _contractWord = contractWord;
+    }
 
     [Authorize(Roles = "Customer")]
     [HttpGet]
@@ -48,6 +53,19 @@ public class RentalOrderController : Controller
     {
         var order = await _orders.GetDetailAsync(id, CurrentUserId, User.IsInRole("Admin"));
         return order is null ? NotFound() : View(order);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadContract(Guid id)
+    {
+        var order = await _orders.GetDetailAsync(id, CurrentUserId, User.IsInRole("Admin"));
+        if (order?.Contract is null) return NotFound();
+
+        var document = _contractWord.Generate(order);
+        return File(
+            document.Content,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            document.FileName);
     }
 
     [Authorize(Roles = "Customer")]

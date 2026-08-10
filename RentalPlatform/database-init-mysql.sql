@@ -10,6 +10,9 @@ CREATE TABLE `Users` (
     `HoTen` varchar(100) NOT NULL,
     `Email` varchar(150) NOT NULL,
     `SDT` varchar(15) NULL,
+    `SoCCCD` varchar(20) NULL,
+    `SoGPLX` varchar(30) NULL,
+    `DiaChi` varchar(300) NULL,
     `PasswordHash` longtext NOT NULL,
     `Role` longtext NOT NULL,
     `CreatedAt` datetime(6) NOT NULL,
@@ -68,6 +71,11 @@ CREATE TABLE `RentalOrderContracts` (
     `RentalOrderId` char(36) NOT NULL,
     `SoHopDong` varchar(30) NOT NULL,
     `NoiDungHopDong` longtext NOT NULL,
+    `HoTenChuXe` varchar(100) NOT NULL,
+    `EmailChuXe` varchar(150) NOT NULL,
+    `SDTChuXe` varchar(15) NULL,
+    `SoCCCDChuXe` varchar(20) NULL,
+    `DiaChiChuXe` varchar(300) NULL,
     `DaKyKhach` tinyint(1) NOT NULL,
     `NgayKyKhach` datetime(6) NULL,
     `DaKyChuXe` tinyint(1) NOT NULL,
@@ -234,5 +242,8 @@ CREATE INDEX `IX_Vehicles_TrangThai` ON `Vehicles` (`TrangThai`);
 
 INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
 VALUES ('20260807143030_InitialMySql', '10.0.9');
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20260810091102_AddContractWordProfileFields', '10.0.9');
 
 COMMIT;

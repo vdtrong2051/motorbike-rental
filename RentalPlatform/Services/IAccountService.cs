@@ -7,4 +7,6 @@ public interface IAccountService
 {
     Task<(bool Success, string? Error)> RegisterAsync(RegisterViewModel model);
     Task<User?> ValidateLoginAsync(string email, string password);
+    Task<ProfileViewModel?> GetProfileAsync(Guid userId);
+    Task<(bool Success, string? Error)> UpdateProfileAsync(Guid userId, ProfileViewModel model);
 }

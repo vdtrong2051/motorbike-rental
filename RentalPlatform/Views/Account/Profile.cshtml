@@ -1,16 +1,64 @@
-@using System.Security.Claims
+@model ProfileViewModel
 @{
     ViewData["Title"] = "Hồ sơ cá nhân";
 }
 
-<h2>Hồ sơ cá nhân</h2>
-<dl class="row">
-    <dt class="col-sm-3">Họ tên</dt>
-    <dd class="col-sm-9">@User.Identity?.Name</dd>
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <div class="hero-eyebrow">Thông tin pháp lý</div>
+                <h2 class="mb-1">Hồ sơ cá nhân</h2>
+                <p class="text-muted mb-0">Thông tin này được dùng để lập hợp đồng thuê xe.</p>
+            </div>
+            <span class="badge bg-secondary">@Model.Role</span>
+        </div>
 
-    <dt class="col-sm-3">Email</dt>
-    <dd class="col-sm-9">@User.FindFirst(ClaimTypes.Email)?.Value</dd>
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Profile" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="HoTen" class="form-label"></label>
+                            <input asp-for="HoTen" class="form-control" />
+                            <span asp-validation-for="HoTen" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SDT" class="form-label"></label>
+                            <input asp-for="SDT" class="form-control" />
+                            <span asp-validation-for="SDT" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SoCCCD" class="form-label"></label>
+                            <input asp-for="SoCCCD" class="form-control" inputmode="numeric" />
+                            <span asp-validation-for="SoCCCD" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SoGPLX" class="form-label"></label>
+                            <input asp-for="SoGPLX" class="form-control" />
+                            <span asp-validation-for="SoGPLX" class="text-danger"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="DiaChi" class="form-label"></label>
+                            <textarea asp-for="DiaChi" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="DiaChi" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-3">
+                        Chủ xe cần cập nhật CCCD và địa chỉ trước khi nhận đơn để hợp đồng Word có đủ thông tin Bên A.
+                    </div>
+                    <button type="submit" class="btn btn-primary">Lưu hồ sơ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <dt class="col-sm-3">Vai trò</dt>
-    <dd class="col-sm-9">@User.FindFirst(ClaimTypes.Role)?.Value</dd>
-</dl>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

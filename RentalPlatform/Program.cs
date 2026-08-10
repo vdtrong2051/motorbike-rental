@@ -35,6 +35,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>(); // TODO: xác nhận đúng tên class
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IRentalOrderService, RentalOrderService>();
+builder.Services.AddSingleton<IRentalContractWordService, RentalContractWordService>();
 
 // Tăng giới hạn dung lượng request để cho phép upload nhiều ảnh xe (mặc định Kestrel ~28.6MB)
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
