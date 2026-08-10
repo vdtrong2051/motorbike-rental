@@ -30,7 +30,7 @@ public class VehicleRepository : IVehicleRepository
         return vehicle;
     }
 
-    public async Task UpdateAsync(Vehicle vehicle)
+    public async Task UpdateAsync(Vehicle vehicle, IReadOnlyCollection<VehicleImage>? newImages = null)
     {
         // Không gọi _db.Vehicles.Update(vehicle) ở đây: vehicle đã được EF Core
         // tracking sẵn (vừa Add hoặc vừa GetByIdAsync trong cùng request), nên
@@ -39,6 +39,11 @@ public class VehicleRepository : IVehicleRepository
         // vào vehicle.HinhAnh) thành "Modified" thay vì "Added" — vì Guid Id của
         // ảnh đã được sinh sẵn ở phía C# nên EF tưởng dòng đó đã tồn tại trong DB,
         // dẫn đến DbUpdateConcurrencyException (UPDATE khớp 0 dòng).
+        // Đánh dấu tường minh các ảnh mới là Added để MySQL luôn nhận INSERT,
+        // không phụ thuộc vào cách EF suy luận trạng thái từ Guid đã được sinh sẵn.
+        if (newImages is { Count: > 0 })
+            _db.VehicleImages.AddRange(newImages);
+
         await _db.SaveChangesAsync();
     }
 

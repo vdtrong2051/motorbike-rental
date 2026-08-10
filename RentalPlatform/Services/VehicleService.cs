@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.Vehicle;
 using RentalPlatform.Repositories;
@@ -80,12 +81,21 @@ public class VehicleService : IVehicleService
             vehicle.LyDoTuChoi = null;
         }
 
-        ThemAnhXe(vehicle, anhMoi);
+        var newImages = ThemAnhXe(vehicle, anhMoi);
 
         // Gộp cập nhật field + ảnh mới trong 1 lần SaveChanges (trước đây gọi UpdateAsync
         // 2 lần riêng biệt — lần đầu lưu field, lần sau lưu ảnh — khiến field có thể đã
         // commit dù ảnh sau đó lỗi).
-        await _repository.UpdateAsync(vehicle);
+        try
+        {
+            await _repository.UpdateAsync(vehicle, newImages);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return VehicleOperationResult.Fail(
+                "Dữ liệu xe vừa bị thay đổi hoặc đã bị xoá. Vui lòng tải lại trang và thử lại.");
+        }
+
         return VehicleOperationResult.Ok(vehicle);
     }
 
@@ -202,24 +212,30 @@ public class VehicleService : IVehicleService
         return null;
     }
 
-    private static void ThemAnhXe(Vehicle vehicle, List<string> urls)
+    private static IReadOnlyCollection<VehicleImage> ThemAnhXe(Vehicle vehicle, List<string> urls)
     {
-        if (urls.Count == 0) return;
+        if (urls.Count == 0) return Array.Empty<VehicleImage>();
 
         var thuTuBatDau = vehicle.HinhAnh.Count;
         var coAnhDaiDien = vehicle.HinhAnh.Any(i => i.LaAnhDaiDien);
+        var newImages = new List<VehicleImage>(urls.Count);
 
         var index = 0;
         foreach (var url in urls)
         {
-            vehicle.HinhAnh.Add(new VehicleImage
+            var image = new VehicleImage
             {
                 VehicleId = vehicle.Id,
                 DuongDanAnh = url,
                 ThuTu = thuTuBatDau + index,
                 LaAnhDaiDien = !coAnhDaiDien && index == 0
-            });
+            };
+
+            vehicle.HinhAnh.Add(image);
+            newImages.Add(image);
             index++;
         }
+
+        return newImages;
     }
 }

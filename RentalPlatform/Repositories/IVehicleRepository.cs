@@ -7,7 +7,7 @@ public interface IVehicleRepository
 {
     Task<Vehicle?> GetByIdAsync(Guid id, bool includeImages = true);
     Task<Vehicle> AddAsync(Vehicle vehicle);
-    Task UpdateAsync(Vehicle vehicle);
+    Task UpdateAsync(Vehicle vehicle, IReadOnlyCollection<VehicleImage>? newImages = null);
     Task DeleteAsync(Vehicle vehicle);
     Task<bool> BienSoExistsAsync(string bienSo, Guid? excludeId = null);
     Task<List<Vehicle>> GetByOwnerAsync(Guid ownerId);
