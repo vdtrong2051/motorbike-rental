@@ -1,0 +1,15 @@
+{
+  "email": "customer1@rental.demo",
+  "otherEmail": "customer2@rental.demo",
+  "thirdEmail": "customer3@rental.demo",
+  "ownerEmail": "owner1@rental.demo",
+  "secondOwnerEmail": "owner2@rental.demo",
+  "adminEmail": "admin@rentalplatform.vn",
+  "password": "Customer@123",
+  "ownerPassword": "Owner@123",
+  "adminPassword": "Admin@123",
+  "orderId": "d4000000-0000-4000-8000-000400000007",
+  "vehicleId": "d4000000-0000-4000-8000-000200000001",
+  "reviewItemId": "d4000000-0000-4000-8000-000500000072",
+  "database": "RentalPlatformDemo"
+}

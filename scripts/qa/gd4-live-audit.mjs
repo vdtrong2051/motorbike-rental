@@ -89,7 +89,9 @@ try {
   ];
   for (const [role,email,pages] of roleCases) {
     const context=await browser.newContext();
-    try { await login(context,role,email,fixture.password);
+    const rolePassword = role === 'owner' ? (fixture.ownerPassword || fixture.password) :
+      role === 'admin' ? (fixture.adminPassword || fixture.password) : fixture.password;
+    try { await login(context,role,email,rolePassword);
       for(const size of sizes) for(const p of pages) await visit(context,role,p,size);
     } catch { /* login failure already recorded */ }
     await context.close();

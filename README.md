@@ -162,3 +162,12 @@ Hệ thống kiểm tra secret, mã tham chiếu và đúng số tiền trước
 VietQR chỉ tạo nội dung QR; để nhận thông báo giao dịch thật cần cấu hình webhook từ
 nhà cung cấp banking/payment gateway đang sử dụng. Ở môi trường Development có nút
 mô phỏng webhook để demo toàn bộ luồng.
+
+<!-- DEMO DATABASE QUICK START -->
+## Reproducible demo database (GD4 acceptance)
+
+For a fresh clone, run `demo/setup-demo.ps1` in a local PowerShell session.
+It creates a NEW `RentalPlatformDemo` database, never modifies `RentalPlatformDb`, and
+provides 1 original default admin + 2 owners + 3 customers, 12 vehicles covering all
+five states, and sample rental orders, payments and reviews.
+See [Demo credentials, safety and setup](docs/DEMO_DATABASE.md).

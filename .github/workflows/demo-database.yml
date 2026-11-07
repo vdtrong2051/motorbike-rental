@@ -1,0 +1,84 @@
+name: Demo database reproducibility
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  demo-seed:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: demo_ci_secret
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pdemo_ci_secret"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      MYSQL_PWD: demo_ci_secret
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://127.0.0.1:5119
+      GD4_BASE_URL: http://127.0.0.1:5119
+      GD4_FIXTURE_PATH: demo/demo-qa-fixture.json
+      GD4_OUTPUT: artifacts/demo-browser
+      ConnectionStrings__DefaultConnection: 'Server=127.0.0.1;Port=3306;Database=RentalPlatformDemo;User=root;Password=demo_ci_secret;CharSet=utf8mb4;SslMode=Disabled'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install MySQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq default-mysql-client
+      - name: Install pristine demo DB, GD2 and GD3 schemas
+        shell: bash
+        run: |
+          set -euo pipefail
+          mysql -h 127.0.0.1 -uroot --execute='CREATE DATABASE RentalPlatformDemo CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci'
+          python3 -c "from pathlib import Path; import sys; sys.stdout.write(Path('RentalPlatform/database-init-mysql.sql').read_text(encoding='utf-8-sig'))" | mysql -h 127.0.0.1 -uroot --database=RentalPlatformDemo
+          mysql -h 127.0.0.1 -uroot --database=RentalPlatformDemo < db/gd3_order_item_reviews.sql
+          mysql -h 127.0.0.1 -uroot --database=RentalPlatformDemo < demo/seed-demo.sql
+          mysql -h 127.0.0.1 -uroot --database=RentalPlatformDemo < demo/verify-demo.sql
+          python3 demo/check-static.py
+      - name: Prepare demo identity placeholders and compile app
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p RentalPlatform/App_Data/IdentityDocuments
+          cp RentalPlatform/wwwroot/image/no-image.png RentalPlatform/App_Data/IdentityDocuments/demo-id-front.png
+          cp RentalPlatform/wwwroot/image/no-image.png RentalPlatform/App_Data/IdentityDocuments/demo-id-back.png
+          dotnet restore RentalPlatform/RentalPlatform.csproj
+          dotnet build RentalPlatform/RentalPlatform.csproj -c Release --no-restore
+      - name: Install Chromium
+        shell: bash
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run real app and role-based browser assertions
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project RentalPlatform/RentalPlatform.csproj -c Release --no-build --no-launch-profile > /tmp/demo-app.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5119/ >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:5119/ >/dev/null || { cat /tmp/demo-app.log; exit 1; }
+          node scripts/qa/gd4-live-audit.mjs
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-database-acceptance
+          path: artifacts/demo-browser/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Print startup failure log
+        if: failure()
+        run: tail -n 120 /tmp/demo-app.log || true
