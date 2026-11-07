@@ -1,5 +1,6 @@
 @model SystemPolicy
 @{ ViewData["Title"] = "Chính sách hệ thống"; }
+<div class="gd4-choice-alert mb-3" role="note">Thay đổi chính sách có thể ảnh hưởng các đơn thuê mới.</div>
 <h2>Chính sách hệ thống</h2>
 <form method="post" class="card card-body"><div asp-validation-summary="All" class="text-danger"></div><div class="row g-3">
 <div class="col-md-4"><label class="form-label">Đặt cọc (%)</label><input asp-for="TyLeDatCoc" class="form-control"/></div>

@@ -10,7 +10,13 @@
     var giaTriTopXe = JsonSerializer.Serialize(Model.TopXeChoThue.Select(x => x.DoanhThu));
 }
 
-<h2 class="mb-4">Dashboard thống kê</h2>
+<header class="gd4-page-title"><span class="gd4-eyebrow">ĐIỀU HÀNH NỀN TẢNG</span><h2>Tổng quan vận hành</h2><p>Theo dõi doanh thu, đội xe và những yêu cầu cần xử lý.</p></header>
+<nav class="gd4-action-strip" aria-label="Thao tác quản trị">
+    <a asp-controller="Admin" asp-action="PendingVehicles">Xe chờ duyệt (@Model.SoXeChoDuyet)</a>
+    <a asp-controller="Admin" asp-action="Users">Xác thực người dùng</a>
+    <a asp-controller="Admin" asp-action="Payments">Đối soát thanh toán</a>
+    <a asp-controller="OrderReview" asp-action="AdminReviews">Kiểm duyệt đánh giá</a>
+</nav>
 <div class="row g-2 mb-3">
     <div class="col-md-3"><div class="card card-body"><small>Hôm nay</small><strong>@Model.DoanhThuHomNay.ToString("N0") đ</strong></div></div>
     <div class="col-md-3"><div class="card card-body"><small>Tháng này</small><strong>@Model.DoanhThuThangNay.ToString("N0") đ</strong></div></div>

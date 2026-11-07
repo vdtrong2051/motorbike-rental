@@ -1,5 +1,6 @@
 @model IEnumerable<User>
 @{ ViewData["Title"] = "Quản lý người dùng"; }
+<div class="gd4-choice-alert mb-3" role="note">Xác thực hồ sơ và khóa tài khoản là thao tác ảnh hưởng đến người dùng.</div>
 <h2>Quản lý và xác thực người dùng</h2>
 <div class="table-responsive"><table class="table table-sm align-middle"><thead><tr><th>Người dùng</th><th>Vai trò</th><th>Hồ sơ</th><th>Xác thực</th><th>Vi phạm</th><th>Thao tác</th></tr></thead><tbody>
 @foreach (var u in Model) {
