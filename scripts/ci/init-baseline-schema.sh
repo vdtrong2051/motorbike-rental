@@ -20,6 +20,7 @@ git worktree add --detach "$BASE_DIR" "$BASE_COMMIT"
 (
   cd "$BASE_DIR/RentalPlatform"
   dotnet tool restore
+  dotnet restore RentalPlatform.csproj
   dotnet tool run dotnet-ef database update --configuration Release
 )
 echo "Existing EF schema initialized using accepted GD2 model. GD3 table is independent SQL."
