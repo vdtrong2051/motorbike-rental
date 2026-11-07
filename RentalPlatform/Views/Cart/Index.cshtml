@@ -3,7 +3,7 @@
     ViewData["Title"] = "Giỏ xe";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="gd4-cart-page"><div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <div class="hero-eyebrow">Đơn thuê nhiều xe</div>
         <h2 class="mb-0">Giỏ xe của bạn</h2>
@@ -11,6 +11,7 @@
     <a asp-controller="Vehicle" asp-action="Index" class="btn btn-outline-primary">+ Chọn thêm xe</a>
 </div>
 
+<p class="gd4-choice-alert"><strong>Đặt nhiều xe:</strong> Một đơn thuê chỉ được chứa xe của cùng một chủ. Nếu muốn đặt xe từ chủ khác, vui lòng tạo đơn riêng.</p>
 @if (!Model.Items.Any())
 {
     <div class="empty-state card">
@@ -62,3 +63,4 @@ else
         </div>
     </div>
 }
+</div>

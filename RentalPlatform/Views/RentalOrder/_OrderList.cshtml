@@ -1,7 +1,7 @@
 @model List<RentalOrder>
 @if (!Model.Any())
 {
-    <div class="alert alert-info">Chưa có đơn thuê nào.</div>
+    <div class="gd4-empty-state"><h3>Chưa có đơn thuê nào</h3><p class="gd4-note">Khi có đơn thuê, bạn sẽ theo dõi xác nhận, thanh toán và giao nhận ngay tại đây.</p><a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">Khám phá xe</a></div>
 }
 else
 {

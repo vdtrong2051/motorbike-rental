@@ -10,7 +10,7 @@
         ?? new Dictionary<Guid, RentalOrderItemReview>();
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+<div class="gd4-order-page"><div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div>
         <div class="hero-eyebrow">Đơn thuê nhiều xe</div>
         <h2 class="mb-1">@Model.MaDon</h2>
@@ -20,6 +20,7 @@
     <div class="text-end"><div class="small text-muted">Tổng giá trị</div><div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div></div>
 </div>
 
+<partial name="_Gd4OrderJourney" model="Model" />
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card mb-4">
@@ -175,4 +176,5 @@
             </div>
         </div>
     </div>
+</div>
 </div>

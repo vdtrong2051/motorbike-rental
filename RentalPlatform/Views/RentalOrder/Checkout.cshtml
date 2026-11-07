@@ -3,6 +3,7 @@
     ViewData["Title"] = "Thông tin thuê xe";
 }
 
+<div class="gd4-checkout-page"><header class="gd4-page-title"><span class="gd4-eyebrow">HOÀN THÀNH THÔNG TIN</span><h1>Thông tin thuê xe</h1><p>Kiểm tra thời gian từng xe và tổng tiền trước khi tạo đơn. Đơn cần chủ xe xác nhận trước khi xử lý tiếp.</p></header>
 <div class="checkout-steps mb-4">
     <span class="done">1. Giỏ xe</span><span class="active">2. Thông tin thuê</span><span>3. Xác nhận &amp; thanh toán</span>
 </div>
@@ -100,7 +101,7 @@
             <div class="card border-success">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div><strong>Tạm tính toàn đơn</strong><div class="small text-muted">Tính theo mỗi 24 giờ, làm tròn lên</div></div>
-                    <div class="price-tag fs-4" id="grandTotal">—</div>
+                    <div class="price-tag fs-4" id="grandTotal" role="status" aria-live="polite">—</div>
                 </div>
             </div>
             <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Xác nhận thông tin và tạo hợp đồng</button>
@@ -108,6 +109,7 @@
     </div>
 </form>
 
+</div>
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>

@@ -21,7 +21,7 @@
 <div class="checkout-steps mb-4">
     <span class="done">1. Giỏ xe</span><span class="done">2. Thông tin thuê</span><span class="active">3. Thanh toán</span>
 </div>
-<div class="gd2-payment" data-gd2-payment
+<div class="gd2-payment gd4-payment-page" data-gd2-payment
      data-order-id="@Model.Id" data-status-url="@Url.Action("Status", "OrderPayment", new { orderId = Model.Id })"
      data-expires-at="@expiry" data-pending="@(isPending ? "true" : "false")">
     <div class="gd2-heading">
