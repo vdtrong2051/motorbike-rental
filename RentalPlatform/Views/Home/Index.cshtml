@@ -1,64 +1,56 @@
 @{
-    ViewData["Title"] = "Trang chủ";
+    ViewData["Title"] = "Thuê xe dễ dàng, minh bạch";
 }
-
-<section class="hero">
-    <div class="hero-eyebrow">RentalPlatform · Cho thuê xe tự lái</div>
-    <h1 class="hero-title">Tìm xe.<br />Lên đường.</h1>
-    <p class="hero-lead">
-        Thuê xe máy &amp; ô tô tự lái quanh khu vực bạn, đặt cọc và ký hợp đồng điện tử
-        ngay trên nền tảng — sẵn sàng nhận xe trong hôm nay.
-    </p>
-
-    <form asp-controller="Vehicle" asp-action="Index" method="get" class="route-line">
-        <div class="route-stop">
-            <label for="heroKhuVuc">Điểm nhận xe</label>
-            <input type="text" id="heroKhuVuc" name="KhuVuc" class="form-control" placeholder="VD: Cầu Giấy, Hà Nội" />
+<section class="gd4-hero" aria-labelledby="gd4-hero-heading">
+    <div class="gd4-hero-grid">
+        <div>
+            <span class="gd4-eyebrow">MOTORBIKE RENTAL · HÀNH TRÌNH CỦA BẠN</span>
+            <h1 id="gd4-hero-heading">Chọn đúng xe.<br /><span>Đi đúng nhịp.</span></h1>
+            <p class="gd4-hero-lead">Tìm xe tự lái gần bạn, xem giá rõ ràng, đặt nhiều xe cùng chủ và theo dõi hành trình từ xác nhận đến nhận trả xe — mọi thứ trong một nơi.</p>
         </div>
-        <div class="route-stop">
-            <label for="heroLoaiXe">Loại xe</label>
-            <input type="text" id="heroLoaiXe" name="LoaiXe" class="form-control" placeholder="VD: Sedan, Xe ga..." />
+        <div class="gd4-hero-visual" aria-hidden="true">
+            <span class="gd4-visual-label">ĐẶT XE · BA BƯỚC RÕ RÀNG</span>
+            <div class="gd4-visual-route">
+                <div class="gd4-visual-point">Chọn xe và ngày thuê</div>
+                <div class="gd4-visual-point">Xác nhận và thanh toán</div>
+                <div class="gd4-visual-point">Nhận xe, trải nghiệm</div>
+            </div>
+            <div class="gd4-visual-meta"><span>Rõ chi phí</span><span>Theo dõi đơn</span><span>Đánh giá thực tế</span></div>
         </div>
-        <div class="route-submit">
-            <button type="submit" class="btn btn-primary btn-lg px-4">Tìm xe →</button>
-        </div>
+    </div>
+    <form asp-controller="Vehicle" asp-action="Index" method="get" class="gd4-hero-search" data-gd4-date-range aria-label="Tìm xe theo khu vực và thời gian">
+        <div><label for="gd4Area">Khu vực nhận xe</label><input class="form-control" id="gd4Area" name="KhuVuc" placeholder="Đà Nẵng, Hải Châu…" autocomplete="address-level2" /></div>
+        <div><label for="gd4Start">Ngày nhận xe</label><input class="form-control" id="gd4Start" name="NgayNhanXe" type="datetime-local" /></div>
+        <div><label for="gd4End">Ngày trả xe</label><input class="form-control" id="gd4End" name="NgayTraXe" type="datetime-local" /></div>
+        <button type="submit" class="btn btn-primary">Khám phá xe →</button>
     </form>
-
-    @if (!(User.Identity?.IsAuthenticated ?? false))
-    {
-        <div class="mt-4">
-            <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Register">Đăng ký tài khoản</a>
-            <a class="btn btn-link" asp-controller="Account" asp-action="Login">Đã có tài khoản? Đăng nhập</a>
-        </div>
-    }
 </section>
-
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <span class="badge bg-success mb-2">Bước 1</span>
-                <h5 class="card-title">Tìm &amp; đặt xe</h5>
-                <p class="card-text text-muted">Lọc theo khu vực, loại xe, mức giá và khoảng ngày còn trống — hệ thống tự kiểm tra trùng lịch.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <span class="badge bg-warning text-dark mb-2">Bước 2</span>
-                <h5 class="card-title">Ký hợp đồng &amp; đặt cọc</h5>
-                <p class="card-text text-muted">Chủ xe duyệt đơn, hai bên ký hợp đồng điện tử, khách đặt cọc để giữ xe.</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <span class="badge bg-secondary mb-2">Bước 3</span>
-                <h5 class="card-title">Nhận xe &amp; đánh giá</h5>
-                <p class="card-text text-muted">Xác nhận giao/nhận xe đúng hẹn, thanh toán phần còn lại và để lại đánh giá sau chuyến đi.</p>
-            </div>
-        </div>
-    </div>
+<div class="gd4-trust-strip" aria-label="Lợi ích khi thuê xe">
+    <div class="gd4-trust"><strong>01</strong><span>Xem thông tin và giá thuê trước khi đặt</span></div>
+    <div class="gd4-trust"><strong>02</strong><span>Theo dõi trạng thái đơn và hợp đồng</span></div>
+    <div class="gd4-trust"><strong>03</strong><span>Đánh giá từng xe sau khi hoàn tất</span></div>
 </div>
+<section class="gd4-discover" aria-labelledby="how-it-works">
+    <div class="gd4-section-heading"><div><span class="gd4-eyebrow">CHUẨN BỊ CHO CHUYẾN ĐI</span><h2 id="how-it-works">Thuê xe chưa bao giờ rõ ràng hơn</h2><p>Từ tìm kiếm đến khi trả xe, luôn biết điều gì đang diễn ra.</p></div></div>
+    <div class="gd4-discover-grid">
+        <article class="gd4-discover-step"><span>01</span><h3>Tìm xe phù hợp</h3><p>Chọn khu vực, thời gian, mức giá, đặc điểm xe và đọc đánh giá của khách trước.</p></article>
+        <article class="gd4-discover-step"><span>02</span><h3>Gửi yêu cầu thuê</h3><p>Chọn một hoặc nhiều xe của cùng chủ, điền thông tin và chờ chủ xe xác nhận.</p></article>
+        <article class="gd4-discover-step"><span>03</span><h3>Nhận xe và lên đường</h3><p>Hoàn tất hợp đồng và thanh toán, sau đó nhận/trả xe đúng lịch đã xác nhận.</p></article>
+    </div>
+    <div class="gd4-discover-cta">
+        <div><strong>Bạn đã sẵn sàng?</strong><p class="gd4-note mb-0">Chỉ thanh toán khi hiểu rõ phương thức và tổng chi phí của đơn thuê.</p></div>
+        <a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">Xem danh sách xe</a>
+    </div>
+</section>
+@if (User.IsInRole("Owner"))
+{
+    <section class="gd4-discover" aria-label="Lối tắt chủ xe"><span class="gd4-eyebrow">KHU VỰC CHỦ XE</span><h2>Quản lý các chuyến đi của bạn</h2><p>Ưu tiên đơn cần xử lý và lịch giao nhận xe.</p><a asp-controller="OwnerPortal" asp-action="Dashboard" class="btn btn-primary">Mở khu vực chủ xe</a></section>
+}
+@if (User.IsInRole("Admin"))
+{
+    <section class="gd4-discover" aria-label="Lối tắt quản trị"><span class="gd4-eyebrow">KHU VỰC QUẢN TRỊ</span><h2>Điều hành và kiểm soát</h2><p>Theo dõi người dùng, đội xe, thanh toán và các yêu cầu kiểm duyệt.</p><a asp-controller="Admin" asp-action="Dashboard" class="btn btn-primary">Mở quản trị</a></section>
+}
+@if (!(User.Identity?.IsAuthenticated ?? false))
+{
+    <section class="gd4-discover" aria-label="Đăng ký"><span class="gd4-eyebrow">BẮT ĐẦU</span><h2>Tạo tài khoản để đặt xe</h2><p>Bạn có thể khám phá xe trước, rồi đăng nhập khi sẵn sàng đặt.</p><a asp-controller="Account" asp-action="Register" class="btn btn-primary">Đăng ký</a> <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary ms-2">Đăng nhập</a></section>
+}

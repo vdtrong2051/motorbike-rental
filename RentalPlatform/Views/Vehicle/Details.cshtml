@@ -4,8 +4,11 @@
     var anhSapXep = Model.HinhAnh.OrderByDescending(i => i.LaAnhDaiDien).ThenBy(i => i.ThuTu).ToList();
 }
 
-<div class="row">
-    <div class="col-md-7">
+<nav class="gd4-breadcrumbs" aria-label="Đường dẫn"><a asp-controller="Home" asp-action="Index">Trang chủ</a>
+    <span aria-hidden="true">/</span><a asp-controller="Vehicle" asp-action="Index">Danh sách xe</a>
+    <span aria-hidden="true">/</span><span>@Model.TenXe</span></nav>
+<div class="row gd4-vehicle-detail gy-4">
+    <div class="col-lg-7">
         @if (anhSapXep.Any())
         {
             <div id="carouselAnhXe" class="carousel slide mb-3">
@@ -33,7 +36,8 @@
             <img src="/image/no-image.png" class="w-100 mb-3" style="height:360px;object-fit:cover;" alt="Chưa có ảnh" />
         }
     </div>
-    <div class="col-md-5">
+    <div class="col-lg-5">
+        <span class="gd4-eyebrow">THÔNG TIN XE</span>
         <h2>@Model.TenXe</h2>
         <p class="text-muted mb-2">@Model.HangXe · @Model.KhuVuc</p>
         <h4 class="text-primary mb-2">@Model.GiaThueMotNgay.ToString("N0") đ / ngày</h4>

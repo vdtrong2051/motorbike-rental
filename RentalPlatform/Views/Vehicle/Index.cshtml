@@ -4,9 +4,14 @@
     var filter = Model.Filter;
 }
 
-<h2 class="mb-4">Tìm xe cho thuê</h2>
+<header class="gd4-page-title"><span class="gd4-eyebrow">KHÁM PHÁ MOTORBIKE RENTAL</span>
+    <h1>Tìm xe cho chuyến đi của bạn</h1>
+    <p>Lọc theo khu vực, thời gian, giá và đặc điểm xe trước khi đặt.</p>
+</header>
+<div class="gd4-search-layout"><aside class="gd4-search-filters" aria-label="Bộ lọc xe">
+    <details class="gd4-filter-details" data-gd4-filter open><summary>Bộ lọc tìm kiếm</summary>
 
-<form asp-controller="Vehicle" asp-action="Index" method="get" class="filter-panel mb-4">
+<form asp-controller="Vehicle" asp-action="Index" method="get" data-gd4-date-range class="filter-panel mb-4">
     <div class="row g-3 align-items-end">
     <div class="col-lg-4">
         <label class="form-label">Từ khoá</label>
@@ -76,7 +81,8 @@
         <a asp-action="Index" class="btn btn-outline-secondary">Xoá</a>
     </div>
     </div>
-</form>
+</form></details></aside><section class="gd4-search-results" aria-label="Kết quả tìm kiếm">
+<div class="gd4-results-meta" role="status">Có <strong>@Model.Filter.TotalCount</strong> xe phù hợp với tìm kiếm của bạn.</div>
 
 @if (!Model.Items.Any())
 {
@@ -84,12 +90,12 @@
 }
 else
 {
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
         @foreach (var xe in Model.Items)
         {
             var anhDaiDien = xe.HinhAnh.FirstOrDefault(i => i.LaAnhDaiDien) ?? xe.HinhAnh.FirstOrDefault();
             <div class="col">
-                <div class="card h-100">
+                <div class="card h-100 gd4-vehicle-card">
                     <img src="@(anhDaiDien?.DuongDanAnh ?? "/image/no-image.png")" class="card-img-top" style="height:180px;object-fit:cover;" alt="@xe.TenXe" />
                     <div class="card-body">
                         <span class="badge bg-secondary mb-2">@xe.LoaiXe</span>
@@ -98,7 +104,7 @@ else
                         <p class="card-text mb-1 price-tag fs-5">@xe.GiaThueMotNgay.ToString("N0") đ<span class="text-muted fs-6 fw-normal"> / ngày</span></p>
                         <p class="card-text text-muted mb-1">📍 @xe.KhuVuc</p>
                         <p class="card-text text-muted small">@xe.SoChoNgoi chỗ · @xe.HopSo</p>
-                        <div class="d-flex gap-2">
+                        <div class="gd4-card-foot">
                             <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@xe.Id" class="btn btn-outline-primary btn-sm">Chi tiết</a>
                             @if (User.IsInRole("Customer"))
                             {
@@ -136,3 +142,4 @@ else
         </nav>
     }
 }
+</section></div>
