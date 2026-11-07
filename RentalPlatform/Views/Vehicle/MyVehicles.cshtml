@@ -3,6 +3,7 @@
     ViewData["Title"] = "Xe của tôi";
 }
 
+<div class="gd4-choice-alert mb-3">Đội xe của bạn: cập nhật trạng thái, hình ảnh và giá để khách chọn đúng xe.</div>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Xe của tôi</h2>
     <a asp-controller="Vehicle" asp-action="Create" class="btn btn-primary">+ Đăng xe mới</a>
@@ -14,7 +15,7 @@
 }
 else
 {
-    <table class="table align-middle">
+    <div class="table-responsive"><table class="table align-middle">
         <thead>
             <tr>
                 <th>Ảnh</th>
@@ -81,5 +82,5 @@ else
                 </tr>
             }
         </tbody>
-    </table>
+    </table></div>
 }

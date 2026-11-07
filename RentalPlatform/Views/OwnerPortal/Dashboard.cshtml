@@ -10,6 +10,12 @@
     <div><div class="hero-eyebrow">Dành cho chủ xe</div><h2 class="mb-0">Dashboard doanh thu</h2></div>
     <a asp-action="Calendar" class="btn btn-outline-primary">Mở lịch cho thuê</a>
 </div>
+<nav class="gd4-action-strip" aria-label="Thao tác chủ xe">
+    <a asp-controller="RentalOrder" asp-action="OwnerOrders">Đơn chờ xử lý (@Model.DonChoXacNhan)</a>
+    <a asp-controller="Vehicle" asp-action="MyVehicles">Quản lý đội xe</a>
+    <a asp-controller="OwnerPortal" asp-action="Calendar">Lịch giao nhận</a>
+    <a asp-controller="OrderReview" asp-action="OwnerReviews">Đánh giá khách thuê</a>
+</nav>
 <div class="row g-3 mb-4">
     <div class="col-md-3 col-6"><div class="metric-card"><span>Hôm nay</span><strong>@Model.DoanhThuHomNay.ToString("N0") đ</strong></div></div>
     <div class="col-md-3 col-6"><div class="metric-card"><span>Tháng này</span><strong>@Model.DoanhThuThangNay.ToString("N0") đ</strong></div></div>
