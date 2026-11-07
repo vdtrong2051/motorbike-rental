@@ -1,0 +1,45 @@
+<nav class="navbar navbar-expand-lg gd4-public-nav" aria-label="Điều hướng chính">
+    <div class="container">
+        <a class="navbar-brand gd4-logo" asp-controller="Home" asp-action="Index" aria-label="Motorbike Rental — Trang chủ">
+            <span aria-hidden="true" class="gd4-logo-mark">M</span><span>Motorbike<span class="gd4-logo-soft">Rental</span></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#gd4MainNav"
+                aria-controls="gd4MainNav" aria-expanded="false" aria-label="Mở điều hướng">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="gd4MainNav">
+            <ul class="navbar-nav mx-auto gap-lg-2">
+                <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="nav-item"><a class="nav-link" asp-controller="Vehicle" asp-action="Index">Khám phá xe</a></li>
+                @if (User.IsInRole("Customer"))
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="RentalOrder" asp-action="MyOrders">Chuyến đi của tôi</a></li>
+                }
+                @if (User.IsInRole("Owner"))
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="OwnerPortal" asp-action="Dashboard">Khu vực chủ xe</a></li>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Dashboard">Quản trị</a></li>
+                }
+            </ul>
+            <div class="gd4-nav-actions">
+                @if (User.IsInRole("Customer"))
+                {
+                    <a class="gd4-cart-pill" asp-controller="Cart" asp-action="Index">Giỏ xe <span id="cartCount" aria-label="Số xe">0</span></a>
+                }
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a class="gd4-nav-profile" asp-controller="Account" asp-action="Profile">Hồ sơ</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post"><button class="btn btn-sm btn-outline-secondary" type="submit">Đăng xuất</button></form>
+                }
+                else
+                {
+                    <a class="gd4-nav-profile" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                    <a class="btn btn-primary gd4-nav-register" asp-controller="Account" asp-action="Register">Bắt đầu</a>
+                }
+            </div>
+        </div>
+    </div>
+</nav>

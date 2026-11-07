@@ -1,3 +1,9 @@
 @{
-    Layout = "_Layout";
+    // Public pages remain marketplace even for users who also access a workspace.
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var publicPage = controller == "Home" || (controller == "Account" && action != "Profile") ||
+        (controller == "Vehicle" && (action == "Index" || action == "Details"));
+    Layout = !publicPage && (User.IsInRole("Owner") || User.IsInRole("Admin"))
+        ? "_Gd4WorkspaceLayout" : "_Gd4MarketplaceLayout";
 }

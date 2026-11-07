@@ -1,0 +1,75 @@
+/* GD4.6 mobile, keyboard and reduced-motion acceptance styles. */
+@media (max-width: 1199.98px) {
+  .gd4-hero-grid { grid-template-columns: 1fr .8fr; }
+  .gd4-hero-search { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .gd4-hero-search .btn { width:100%; }
+  .gd4-vehicle-detail > .col-lg-5 { position:static; }
+}
+@media (max-width: 991.98px) {
+  .gd4-public-nav .navbar-collapse { padding-top:1rem; }
+  .gd4-hero-grid { grid-template-columns:1fr; }
+  .gd4-hero-visual { display:none; }
+  .gd4-trust-strip { grid-template-columns:1fr; gap:.6rem; }
+  .gd4-sidebar { width:100%!important; min-height:unset; border-right:0!important; border-bottom:1px solid var(--gd4-line)!important; }
+  .gd4-sidebar .navbar-brand { padding:.45rem; }
+  .gd4-sidebar .container-fluid { display:block; }
+  .gd4-sidebar-foot { display:none; }
+  .gd4-topbar { padding:.8rem 1rem; }
+  .gd4-topbar .gd4-user-tools .btn { padding:.4rem .55rem; }
+  .gd4-workspace-shell { display:block; }
+  .gd4-workspace .table-responsive { -webkit-overflow-scrolling:touch; }
+}
+@media (max-width: 767.98px) {
+  .gd4-public-nav { position:relative; }
+  .gd4-main { padding-top:.95rem; }
+  .gd4-hero { border-radius:17px; padding:2rem 1.3rem; }
+  .gd4-hero h1 { font-size:2.35rem; }
+  .gd4-hero-search { display:grid; grid-template-columns:1fr; }
+  .gd4-discover { padding:1.3rem; }
+  .gd4-discover-grid { grid-template-columns:1fr; }
+  .gd4-section-heading { display:block; }
+  .gd4-footer-inner { flex-direction:column; }
+  .gd4-filter-details summary { padding:.9rem 1rem; }
+  .gd4-journey { padding:1rem; }
+  .gd4-journey-steps { grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; }
+  .gd4-journey-top { flex-wrap:wrap; }
+  .gd4-order-page .table-responsive,.gd4-workspace .table-responsive { overflow-x:auto; }
+  .gd4-user-tools { justify-content:flex-end; }
+  .gd4-topbar { gap:.45rem; }
+  .gd4-topbar .gd4-eyebrow { font-size:.59rem; }
+  .gd4-topbar strong { font-size:.79rem; }
+  .gd4-workspace-main { padding-top:.85rem; }
+  .gd4-workspace-main .card-body { padding:1rem; }
+}
+@media (max-width: 399.98px) {
+  .gd4-nav-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .gd4-nav-actions form { width:100%; }
+  .gd4-nav-actions button { width:100%; }
+  .gd4-hero h1 { font-size:2.1rem; }
+  .gd4-journey-steps { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .gd4-topbar .gd4-user-tools { gap:.3rem; }
+  .gd4-topbar .gd4-user-tools .btn { font-size:.71rem; }
+}
+@media print {
+  .gd4-public-nav,.gd4-sidebar,.gd4-topbar,.gd4-footer,.gd4-user-tools,.gd4-action-strip,.btn { display:none!important; }
+  body { background:white!important; color:#000!important; }
+  .card { break-inside:avoid; box-shadow:none!important; }
+  .gd4-workspace-main { padding:0!important; }
+}
+@media(max-width:767.98px) {
+  #rentalCalendar .fc-toolbar { flex-direction:column; gap:.7rem; }
+  #rentalCalendar .fc-toolbar .fc-button { padding:.3rem .55rem; }
+  #rentalCalendar .fc-daygrid-day-number { font-size:.75rem; }
+  .gd4-workspace .table-responsive { max-width:100%; }
+}
+@media (max-width: 575.98px) {
+  .gd4-cart-page .card-body.d-flex { flex-wrap:wrap; align-items:flex-start!important; }
+  .gd4-cart-page .cart-thumb { flex:0 0 80px; max-width:80px; }
+  .gd4-cart-page .card-body.d-flex > form { width:100%; }
+  .gd4-cart-page .card-body.d-flex > form button { width:100%; }
+  .gd4-marketplace .gd4-vehicle-card .gd4-card-foot { flex-direction:column; }
+  .gd4-marketplace .gd4-vehicle-card .gd4-card-foot .btn,
+  .gd4-marketplace .gd4-vehicle-card .gd4-card-foot form { width:100%; }
+  .gd4-marketplace .gd4-vehicle-card .gd4-card-foot form .btn { width:100%; }
+  .gd4-auth-page { margin-inline:0; }
+}

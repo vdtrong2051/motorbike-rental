@@ -1,0 +1,8 @@
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="alert alert-success gd4-alert" role="status" aria-live="polite">@success</div>
+}
+@if (TempData["ErrorMessage"] is string error)
+{
+    <div class="alert alert-danger gd4-alert" role="alert">@error</div>
+}

@@ -1,0 +1,44 @@
+@{
+    var isAdmin = User.IsInRole("Admin");
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Active(string controller, string action) => currentController == controller && currentAction == action ? "active" : "";
+}
+<aside class="navbar navbar-vertical navbar-expand-lg gd4-sidebar" aria-label="Danh mục quản lý">
+    <div class="container-fluid">
+        <h1 class="navbar-brand"><a asp-controller="Home" asp-action="Index"><span class="gd4-logo-mark">M</span>Motorbike Rental</a></h1>
+        <div class="collapse navbar-collapse" id="gd4SideMenu">
+            <ul class="navbar-nav">
+                @if (isAdmin)
+                {
+                    <li class="gd4-nav-label">TỔNG QUAN</li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "Dashboard"))" asp-controller="Admin" asp-action="Dashboard">Tổng quan</a></li>
+                    <li class="gd4-nav-label">VẬN HÀNH</li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "PendingVehicles"))" asp-controller="Admin" asp-action="PendingVehicles">Xe chờ duyệt</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "Vehicles"))" asp-controller="Admin" asp-action="Vehicles">Quản lý xe</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "Users"))" asp-controller="Admin" asp-action="Users">Người dùng &amp; xác thực</a></li>
+                    <li class="gd4-nav-label">TÀI CHÍNH &amp; KIỂM SOÁT</li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "Payments"))" asp-controller="Admin" asp-action="Payments">Thanh toán &amp; hoàn tiền</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("OrderReview", "AdminReviews"))" asp-controller="OrderReview" asp-action="AdminReviews">Đánh giá</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "Violations"))" asp-controller="Admin" asp-action="Violations">Vi phạm</a></li>
+                    <li class="gd4-nav-label">HỆ THỐNG</li>
+                    <li class="nav-item"><a class="nav-link @(Active("Admin", "Policies"))" asp-controller="Admin" asp-action="Policies">Chính sách</a></li>
+                }
+                else
+                {
+                    <li class="gd4-nav-label">VẬN HÀNH CỦA BẠN</li>
+                    <li class="nav-item"><a class="nav-link @(Active("OwnerPortal", "Dashboard"))" asp-controller="OwnerPortal" asp-action="Dashboard">Tổng quan</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("RentalOrder", "OwnerOrders"))" asp-controller="RentalOrder" asp-action="OwnerOrders">Đơn cần xử lý</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("Vehicle", "MyVehicles"))" asp-controller="Vehicle" asp-action="MyVehicles">Đội xe</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("Vehicle", "Create"))" asp-controller="Vehicle" asp-action="Create">Đăng xe mới</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("OwnerPortal", "Calendar"))" asp-controller="OwnerPortal" asp-action="Calendar">Lịch giao nhận</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("OrderReview", "OwnerReviews"))" asp-controller="OrderReview" asp-action="OwnerReviews">Đánh giá từ khách</a></li>
+                    <li class="gd4-nav-label">TÀI KHOẢN</li>
+                    <li class="nav-item"><a class="nav-link @(Active("Violation", "MyReports"))" asp-controller="Violation" asp-action="MyReports">Báo cáo vi phạm</a></li>
+                    <li class="nav-item"><a class="nav-link @(Active("Account", "Profile"))" asp-controller="Account" asp-action="Profile">Hồ sơ của tôi</a></li>
+                }
+            </ul>
+        </div>
+        <div class="gd4-sidebar-foot">@(User.Identity?.Name ?? "Tài khoản")<small>@(isAdmin ? "Quản trị viên" : "Chủ xe")</small></div>
+    </div>
+</aside>

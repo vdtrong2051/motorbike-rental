@@ -1,0 +1,38 @@
+/* GD4.4–4.5: Tabler-based role workspaces. */
+.gd4-workspace { background:#f4f7f7; color:var(--gd4-ink); }
+.gd4-workspace h1,.gd4-workspace h2,.gd4-workspace h3,.gd4-workspace h4 { font-family:var(--gd4-font); letter-spacing:-.035em; }
+.gd4-workspace .navbar.bg-dark { background:#fff!important; }
+.gd4-sidebar { --tblr-navbar-width:270px; background:#fff!important; border-right:1px solid var(--gd4-line)!important; padding:.8rem .7rem; }
+.gd4-sidebar .container-fluid { display:flex; flex-direction:column; align-items:stretch; height:100%; }
+.gd4-sidebar .navbar-brand { font-family:var(--gd4-font); font-size:1rem; letter-spacing:-.04em; text-transform:none; padding: .75rem .35rem 1.45rem; white-space:nowrap; }
+.gd4-sidebar .navbar-brand a { display:flex; gap:.6rem; align-items:center; text-decoration:none; color:var(--gd4-ink); }
+.gd4-sidebar .navbar-brand::before { display:none; }
+.gd4-sidebar .nav-link { color:#3e5651!important; font-weight:600; display:flex; border-radius:10px; margin:2px 0; padding:.75rem .8rem!important; border:0!important; }
+.gd4-sidebar .nav-link:hover { background:#ebf5f1; color:var(--gd4-brand)!important; }
+.gd4-sidebar .nav-link.active { background:#d9efe4; color:#0b604b!important; }
+.gd4-nav-label { list-style:none; margin:1.1rem .8rem .4rem; font-size:.66rem; font-weight:800; letter-spacing:.13em; color:#81928c; }
+.gd4-sidebar-foot { margin-top:auto; border-top:1px solid var(--gd4-line); padding:1.1rem .8rem; font-weight:700; color:var(--gd4-ink); overflow-wrap:anywhere; }
+.gd4-sidebar-foot small { display:block; font-size:.74rem; font-weight:500; color:var(--gd4-muted); }
+.gd4-workspace-content { min-width:0; }
+.gd4-topbar { background:white; border-bottom:1px solid var(--gd4-line); min-height:77px; padding:1rem clamp(1rem,3vw,2rem); display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.gd4-topbar > div:nth-child(2) { display:flex; flex-direction:column; }
+.gd4-topbar strong { font-size:1rem; color:var(--gd4-ink); font-weight:800; }
+.gd4-user-tools { display:flex; gap:.55rem; align-items:center; flex-wrap:wrap; }
+.gd4-user-tools form { margin:0; }
+.gd4-workspace-main { padding-top:1.5rem; padding-bottom:2.5rem; flex:1; }
+.gd4-workspace-main > .container-xl { max-width:1450px; }
+.gd4-workspace-main .card { background:white; border:1px solid var(--gd4-line); box-shadow:var(--gd4-shadow); }
+.gd4-workspace-main .metric-card { background:white; border:1px solid var(--gd4-line); box-shadow:var(--gd4-shadow); min-height:106px; }
+.gd4-workspace-main .card-body { padding:1.25rem; }
+.gd4-workspace .text-bg-primary { background:#e1f3e9!important; color:#0b5b46!important; }
+.gd4-workspace .text-bg-success { background:#e1f3e9!important; color:#0b5b46!important; }
+.gd4-workspace .text-bg-warning { background:#fff1d2!important; color:#70490c!important; }
+.gd4-workspace .text-bg-secondary { background:#eaf0f0!important; color:#355554!important; }
+.gd4-workspace .card h4 { font-size:1rem; font-weight:800; }
+.gd4-workspace .table-responsive { overflow-x:auto; }
+.gd4-workspace .table-responsive .table { min-width:720px; }
+.gd4-workspace .gd4-action-strip a { font-size:.84rem; }
+.gd4-workspace .gd4-action-strip a:first-child { color:white; background:var(--gd4-brand); border-color:var(--gd4-brand); }
+.gd4-workspace .gd4-admin-kpis { margin-bottom:1.2rem; }
+.gd4-workspace .gd4-admin-kpis .card { min-height:102px; }
+.gd4-workspace-footer { color:var(--gd4-muted); text-align:center; padding:1rem; border-top:1px solid var(--gd4-line); font-size:.76rem; }

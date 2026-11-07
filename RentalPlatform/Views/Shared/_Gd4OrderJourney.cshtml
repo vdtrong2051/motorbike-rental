@@ -1,0 +1,32 @@
+@model RentalOrder
+@{
+    var cancelled = Model.TrangThai == TrangThaiDonThue.DaHuy;
+    var completed = Model.TrangThai == TrangThaiDonThue.HoanThanh;
+    var renting = Model.TrangThai == TrangThaiDonThue.DangThue;
+    var confirmed = Model.TrangThai != TrangThaiDonThue.ChoChuXeXacNhan;
+    var paid = Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan;
+    var signed = Model.Contract?.DaKyKhach == true && Model.Contract?.DaKyChuXe == true;
+    string nextText = cancelled ? "Đơn đã hủy. Xem thông tin hoàn tiền và lý do hủy bên dưới."
+        : completed ? "Chuyến đi đã hoàn thành. Khách thuê có thể đánh giá từng xe."
+        : renting ? "Xe đang được thuê. Vui lòng trả xe đúng lịch đã xác nhận."
+        : !confirmed ? "Đang chờ chủ xe xác nhận đơn thuê."
+        : !signed ? "Cần hoàn tất chữ ký của hai bên trước khi tiếp tục."
+        : !paid ? "Kiểm tra và hoàn tất phương thức thanh toán đã chọn."
+        : "Thanh toán đã được ghi nhận. Chờ chủ xe bàn giao xe.";
+}
+<section class="gd4-journey" aria-label="Tiến trình đơn thuê">
+    <div class="gd4-journey-top"><span class="gd4-eyebrow">TIẾN ĐỘ ĐƠN THUÊ</span><strong>@(cancelled ? "Đã hủy" : completed ? "Hoàn thành" : renting ? "Đang thuê" : "Đang xử lý")</strong></div>
+    <ol class="gd4-journey-steps">
+        <li class="done">Tạo đơn</li>
+        <li class="@(confirmed ? "done" : "current")">Chủ xe xác nhận</li>
+        <li class="@(signed ? "done" : confirmed ? "current" : "")">Ký hợp đồng</li>
+        <li class="@(paid ? "done" : signed ? "current" : "")">Thanh toán</li>
+        <li class="@(renting || completed ? "done" : paid ? "current" : "")">Nhận xe</li>
+        <li class="@(completed ? "done" : renting ? "current" : "")">Hoàn tất</li>
+    </ol>
+    <p class="gd4-next-step" role="status"><strong>Bước tiếp theo:</strong> @nextText</p>
+    @if (cancelled && Model.SoTienHoanDuKien > 0)
+    {
+        <p class="gd4-note">Số tiền hoàn dự kiến: <strong>@Model.SoTienHoanDuKien.ToString("N0") đ</strong>. Việc hoàn tiền phải được hệ thống xác nhận.</p>
+    }
+</section>

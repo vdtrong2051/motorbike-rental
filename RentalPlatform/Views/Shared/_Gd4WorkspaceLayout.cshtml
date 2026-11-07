@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi" data-gd4-ui="workspace" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] — @(User.IsInRole("Admin") ? "Quản trị" : "Chủ xe") · Motorbike Rental</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+    <!-- Tabler Core includes Bootstrap; do not load a second Bootstrap bundle. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/core@@1.7.3/dist/css/tabler.min.css" />
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/gd4-core.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/gd4-workspace.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/gd4-responsive.css" rel="stylesheet" asp-append-version="true" />
+</head>
+<body class="gd4-workspace">
+    <a class="gd4-skip" href="#main-content">Đi đến nội dung chính</a>
+    <div class="page gd4-workspace-shell">
+        <partial name="_Gd4WorkspaceSidebar" />
+        <div class="page-wrapper gd4-workspace-content">
+            <header class="gd4-topbar">
+                <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#gd4SideMenu" aria-expanded="false" aria-controls="gd4SideMenu" aria-label="Mở danh mục quản lý">☰</button>
+                <div><span class="gd4-eyebrow">@(User.IsInRole("Admin") ? "ADMIN WORKSPACE" : "OWNER WORKSPACE")</span><strong>@(ViewData["Title"] ?? "Tổng quan")</strong></div>
+                <div class="gd4-user-tools">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-sm">Xem website</a>
+                    <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-secondary btn-sm">Hồ sơ</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post"><button class="btn btn-outline-danger btn-sm" type="submit">Đăng xuất</button></form>
+                </div>
+            </header>
+            <main id="main-content" class="page-body gd4-workspace-main" tabindex="-1">
+                <div class="container-xl">
+                    <partial name="_Gd4Alerts" />
+                    @RenderBody()
+                </div>
+            </main>
+            <footer class="gd4-workspace-footer">Motorbike Rental · @(User.IsInRole("Admin") ? "Quản trị nền tảng" : "Vận hành đội xe")</footer>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@@1.7.3/dist/js/tabler.min.js"></script>
+    <script src="~/js/gd4-interactions.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
