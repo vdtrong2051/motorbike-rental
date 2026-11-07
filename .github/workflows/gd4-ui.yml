@@ -1,0 +1,84 @@
+name: GD4 UI UX browser acceptance
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  ux-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: gd4_disposable_root
+          MYSQL_DATABASE: RentalPlatformDb
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pgd4_disposable_root"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://127.0.0.1:5122
+      GD4_BASE_URL: http://127.0.0.1:5122
+      ConnectionStrings__DefaultConnection: 'Server=127.0.0.1;Port=3306;Database=RentalPlatformDb;User=root;Password=gd4_disposable_root;CharSet=utf8mb4;SslMode=Disabled'
+      GD3_TEST_DATABASE: I_UNDERSTAND_DISPOSABLE
+      GD4_FIXTURE_PATH: /tmp/gd4-http-fixture.json
+      GD3_FIXTURE_PATH: /tmp/gd4-http-fixture.json
+      GD4_OUTPUT: artifacts/gd4-live
+      SeedAdmin__Email: gd4-admin@example.test
+      SeedAdmin__Password: GD4_Admin_Test_2026!
+      SeedAdmin__Name: GD4 Admin
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 15
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify GD4.0 inventory and GD4.1-4.6 UI contracts
+        run: |
+          python3 scripts/ci/check-gd4-0-baseline.py
+          python3 scripts/ci/check-gd4-ui.py
+      - name: Compile Razor and review fixtures
+        run: |
+          dotnet restore tests/Gd3.Reviews.Tests/Gd3.Reviews.Tests.csproj
+          dotnet build tests/Gd3.Reviews.Tests/Gd3.Reviews.Tests.csproj -c Release --no-restore
+      - name: Initialize accepted GD2 schema in disposable MySQL
+        run: bash scripts/ci/init-baseline-schema.sh
+      - name: Add GD3 review table and create disposable browser fixtures
+        run: |
+          dotnet run --project tests/Gd3.Reviews.Tests/Gd3.Reviews.Tests.csproj -c Release --no-build -- init-schema
+          dotnet run --project tests/Gd3.Reviews.Tests/Gd3.Reviews.Tests.csproj -c Release --no-build -- seed-http
+      - name: Install Chromium automation
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run GD4.6 responsive browser acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project RentalPlatform/RentalPlatform.csproj -c Release --no-build --no-launch-profile > /tmp/gd4-app.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:5122/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then cat /tmp/gd4-app.log; exit 1; fi
+          node scripts/qa/gd4-live-audit.mjs
+      - name: Publish disposable visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gd4-ui-acceptance
+          path: artifacts/gd4-live/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Print app log on failure
+        if: failure()
+        run: tail -n 160 /tmp/gd4-app.log || true

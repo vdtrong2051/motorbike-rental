@@ -1,0 +1,8 @@
+{
+  "email": "customer.qa@example.test",
+  "ownerEmail": "owner.qa@example.test",
+  "adminEmail": "admin.qa@example.test",
+  "password": "REPLACE_WITH_TEST_ACCOUNT_PASSWORD",
+  "orderId": "00000000-0000-0000-0000-000000000000",
+  "vehicleId": "00000000-0000-0000-0000-000000000000"
+}

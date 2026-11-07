@@ -3,3 +3,7 @@ ContractQa/
 artifacts/
 **/bin/
 **/obj/
+artifacts/gd4-live/
+node_modules/
+playwright-report/
+test-results/
