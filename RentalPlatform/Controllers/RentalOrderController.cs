@@ -12,11 +12,14 @@ public class RentalOrderController : Controller
 {
     private readonly IRentalOrderService _orders;
     private readonly IRentalContractWordService _contractWord;
+    private readonly IOrderReviewService _orderReviews;
 
-    public RentalOrderController(IRentalOrderService orders, IRentalContractWordService contractWord)
+    public RentalOrderController(IRentalOrderService orders, IRentalContractWordService contractWord,
+        IOrderReviewService orderReviews)
     {
         _orders = orders;
         _contractWord = contractWord;
+        _orderReviews = orderReviews;
     }
 
     [Authorize(Roles = "Customer")]
@@ -52,7 +55,9 @@ public class RentalOrderController : Controller
     public async Task<IActionResult> Details(Guid id)
     {
         var order = await _orders.GetDetailAsync(id, CurrentUserId, User.IsInRole("Admin"));
-        return order is null ? NotFound() : View(order);
+        if (order is null) return NotFound();
+        ViewBag.OrderReviews = await _orderReviews.GetByOrderAsync(id);
+        return View(order);
     }
 
     [HttpGet]

@@ -6,6 +6,8 @@
     var isCustomer = Model.CustomerId == userId;
     var isOwner = Model.OwnerId == userId;
     var mySigned = isCustomer ? Model.Contract?.DaKyKhach == true : Model.Contract?.DaKyChuXe == true;
+    var reviewsByItem = ViewBag.OrderReviews as Dictionary<Guid, RentalOrderItemReview>
+        ?? new Dictionary<Guid, RentalOrderItemReview>();
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
@@ -25,7 +27,7 @@
                 <h4>Danh sách xe (@Model.Items.Count)</h4>
                 <div class="table-responsive">
                     <table class="table align-middle">
-                        <thead><tr><th>Xe</th><th>Thời gian</th><th>Tình trạng</th><th class="text-end">Thành tiền</th></tr></thead>
+                        <thead><tr><th>Xe</th><th>Thời gian</th><th>Tình trạng</th><th class="text-end">Thành tiền</th><th>Đánh giá</th></tr></thead>
                         <tbody>
                         @foreach (var item in Model.Items)
                         {
@@ -34,6 +36,24 @@
                                 <td>@item.NgayNhanXe.ToString("dd/MM/yyyy HH:mm")<br />→ @item.NgayTraXe.ToString("dd/MM/yyyy HH:mm")<div class="small text-muted">@item.SoNgayThue ngày</div></td>
                                 <td class="small">@item.TinhTrangLucDat</td>
                                 <td class="text-end price-tag">@item.ThanhTien.ToString("N0") đ</td>
+                                <td>
+                                    @if (isCustomer && Model.TrangThai == TrangThaiDonThue.HoanThanh)
+                                    {
+                                        @if (reviewsByItem.TryGetValue(item.Id, out var existingReview))
+                                        {
+                                            <span class="badge bg-success" title="Bạn đã đánh giá chiếc xe trong lần thuê này">Đã đánh giá @existingReview.SoSao ★</span>
+                                        }
+                                        else
+                                        {
+                                            <a asp-controller="OrderReview" asp-action="Create" asp-route-itemId="@item.Id"
+                                               class="btn btn-outline-primary btn-sm">Đánh giá xe</a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="small text-muted">@(Model.TrangThai == TrangThaiDonThue.HoanThanh ? "—" : "Sau khi hoàn thành")</span>
+                                    }
+                                </td>
                             </tr>
                         }
                         </tbody>

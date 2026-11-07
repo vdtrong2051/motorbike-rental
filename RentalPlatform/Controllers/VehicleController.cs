@@ -10,10 +10,12 @@ namespace RentalPlatform.Controllers;
 public class VehicleController : Controller
 {
     private readonly IVehicleService _vehicleService;
+    private readonly IOrderReviewService _orderReviews;
 
-    public VehicleController(IVehicleService vehicleService)
+    public VehicleController(IVehicleService vehicleService, IOrderReviewService orderReviews)
     {
         _vehicleService = vehicleService;
+        _orderReviews = orderReviews;
     }
 
     // GET /Vehicle/Index — tìm kiếm & lọc xe công khai (khu vực / loại xe / khoảng giá), có phân trang
@@ -31,6 +33,7 @@ public class VehicleController : Controller
     {
         var vehicle = await _vehicleService.GetDetailAsync(id);
         if (vehicle is null) return NotFound();
+        ViewBag.NewReviews = await _orderReviews.GetPublicByVehicleAsync(id);
         return View(vehicle);
     }
 

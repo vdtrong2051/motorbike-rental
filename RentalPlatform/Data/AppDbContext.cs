@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<RentalOrderItemReview> RentalOrderItemReviews => Set<RentalOrderItemReview>();
     public DbSet<RentalOrder> RentalOrders => Set<RentalOrder>();
     public DbSet<RentalOrderItem> RentalOrderItems => Set<RentalOrderItem>();
     public DbSet<RentalOrderContract> RentalOrderContracts => Set<RentalOrderContract>();
@@ -125,6 +126,21 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(r => r.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RentalOrderItemReview>(entity =>
+        {
+            // GD3 schema is provisioned separately by db/gd3_order_item_reviews.sql.
+            entity.HasIndex(r => r.RentalOrderItemId).IsUnique();
+            entity.HasIndex(r => new { r.VehicleId, r.IsVisible });
+            entity.HasIndex(r => r.CustomerId);
+            entity.Property(r => r.NhanXet).HasMaxLength(1000);
+            entity.HasOne(r => r.RentalOrderItem).WithMany()
+                .HasForeignKey(r => r.RentalOrderItemId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(r => r.Vehicle).WithMany()
+                .HasForeignKey(r => r.VehicleId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(r => r.Customer).WithMany()
+                .HasForeignKey(r => r.CustomerId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<RentalOrder>(entity =>

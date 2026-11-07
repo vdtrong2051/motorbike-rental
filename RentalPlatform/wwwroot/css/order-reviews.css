@@ -1,0 +1,6 @@
+/* GD3 component styles; the application's existing palette remains unchanged. */
+.gd3-star-option { display: inline-flex; cursor: pointer; align-items: center; gap: .4rem; }
+.gd3-star-option input { width: 1.15rem; height: 1.15rem; accent-color: #E2A33D; }
+.gd3-star-option span { font-size: 1.1rem; font-weight: 600; }
+.gd3-card { border-radius: .85rem; }
+.gd3-comment { max-width: 27rem; overflow-wrap: anywhere; white-space: pre-wrap; }

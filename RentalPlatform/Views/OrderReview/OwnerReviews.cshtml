@@ -1,0 +1,29 @@
+@model List<RentalPlatform.Models.Entities.RentalOrderItemReview>
+@{
+    ViewData["Title"] = "Đánh giá xe của tôi";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div><div class="hero-eyebrow">Chủ xe</div><h2 class="mb-0">Đánh giá xe của tôi</h2></div>
+    <a asp-controller="RentalOrder" asp-action="OwnerOrders" class="btn btn-outline-secondary">Đơn thuê</a>
+</div>
+@if (Model.Count == 0)
+{
+    <div class="alert alert-info">Chưa có đánh giá nào từ các đơn thuê nhiều xe.</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-lg-2 g-3">
+        @foreach (var review in Model)
+        {
+            <div class="col"><article class="card h-100"><div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <h5 class="mb-1">@review.Vehicle.TenXe</h5>
+                    <span class="text-warning" aria-label="@review.SoSao trên 5 sao">@(new string('★', review.SoSao))@(new string('☆', 5 - review.SoSao))</span>
+                </div>
+                <p class="text-muted small mb-2">@review.Customer.HoTen · @review.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy") · Đơn @review.RentalOrderItem.RentalOrder.MaDon</p>
+                @if (!string.IsNullOrWhiteSpace(review.NhanXet)) { <p>@review.NhanXet</p> }
+                <span class="badge @(review.IsVisible ? "bg-success" : "bg-secondary")">@(review.IsVisible ? "Công khai" : "Đã ẩn bởi Admin")</span>
+            </div></article></div>
+        }
+    </div>
+}

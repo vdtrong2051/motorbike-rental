@@ -38,8 +38,11 @@
         <p class="text-muted mb-2">@Model.HangXe · @Model.KhuVuc</p>
         <h4 class="text-primary mb-2">@Model.GiaThueMotNgay.ToString("N0") đ / ngày</h4>
         @{
-            var soLuongDanhGia = Model.DanhGia.Count;
-            var diemTrungBinh = soLuongDanhGia == 0 ? 0 : Math.Round(Model.DanhGia.Average(r => r.SoSao), 1);
+            var newReviews = ViewBag.NewReviews as List<RentalOrderItemReview>
+                ?? new List<RentalOrderItemReview>();
+            var soLuongDanhGia = Model.DanhGia.Count + newReviews.Count;
+            var diemTrungBinh = soLuongDanhGia == 0 ? 0 : Math.Round(
+                (Model.DanhGia.Sum(r => r.SoSao) + newReviews.Sum(r => r.SoSao)) / (double)soLuongDanhGia, 1);
         }
         @if (soLuongDanhGia > 0)
         {
@@ -103,7 +106,15 @@
 </div>
 
 @{
-    var danhSachDanhGia = Model.DanhGia.OrderByDescending(r => r.CreatedAt).ToList();
+    var gd3ReviewItems = ViewBag.NewReviews as List<RentalOrderItemReview>
+        ?? new List<RentalOrderItemReview>();
+    var danhSachDanhGia = Model.DanhGia.Select(r => new
+    {
+        TenKhach = r.Customer.HoTen, r.SoSao, r.NhanXet, r.CreatedAt
+    }).Concat(gd3ReviewItems.Select(r => new
+    {
+        TenKhach = r.Customer.HoTen, r.SoSao, r.NhanXet, r.CreatedAt
+    })).OrderByDescending(r => r.CreatedAt).ToList();
 }
 @if (danhSachDanhGia.Any())
 {
@@ -115,7 +126,7 @@
             <div class="col">
                 <div class="border rounded p-3 h-100">
                     <div class="d-flex justify-content-between align-items-start mb-1">
-                        <strong>@dg.Customer.HoTen</strong>
+                        <strong>@dg.TenKhach</strong>
                         <span class="text-warning">@(new string('★', dg.SoSao))@(new string('☆', 5 - dg.SoSao))</span>
                     </div>
                     <div class="text-muted small mb-2">@dg.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div>

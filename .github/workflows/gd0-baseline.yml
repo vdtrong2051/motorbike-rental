@@ -34,10 +34,7 @@ jobs:
           dotnet restore RentalPlatform/RentalPlatform.csproj
           dotnet build RentalPlatform/RentalPlatform.csproj -c Release --no-restore
       - name: Apply migrations to fresh MySQL
-        working-directory: RentalPlatform
-        run: |
-          dotnet tool restore
-          dotnet tool run dotnet-ef database update --configuration Release
+        run: bash scripts/ci/init-baseline-schema.sh
       - name: Smoke startup and three roles
         shell: bash
         run: |

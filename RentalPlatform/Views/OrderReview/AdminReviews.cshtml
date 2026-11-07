@@ -1,0 +1,64 @@
+@model RentalPlatform.Services.AdminOrderReviewList
+@{
+    ViewData["Title"] = "Kiểm duyệt đánh giá";
+}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div><div class="hero-eyebrow">Quản trị</div><h2 class="mb-0">Đánh giá khách thuê</h2></div>
+    <form asp-action="AdminReviews" asp-controller="OrderReview" method="get" class="d-flex gap-2 align-items-center">
+        <label class="form-label mb-0" for="starsFilter">Số sao</label>
+        <select class="form-select" id="starsFilter" name="stars" aria-label="Lọc số sao">
+            <option value="">Tất cả</option>
+            @for (var i = 1; i <= 5; i++)
+            {
+                <option value="@i" selected="@(Model.Stars == i)">@i sao</option>
+            }
+        </select>
+        <button class="btn btn-outline-primary">Lọc</button>
+    </form>
+</div>
+<h4 class="mb-3">Đơn thuê mới (@Model.OrderReviews.Count)</h4>
+@if (Model.OrderReviews.Count == 0)
+{
+    <div class="alert alert-info">Không có đánh giá nào khớp bộ lọc.</div>
+}
+else
+{
+    <div class="table-responsive mb-5"><table class="table align-middle">
+        <thead><tr><th>Xe / Đơn</th><th>Khách</th><th>Sao</th><th>Nhận xét</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+        <tbody>
+        @foreach (var review in Model.OrderReviews)
+        {
+            <tr>
+                <td><a asp-controller="Vehicle" asp-action="Details" asp-route-id="@review.VehicleId">@review.Vehicle.TenXe</a><div class="small text-muted">@review.RentalOrderItem.RentalOrder.MaDon</div></td>
+                <td>@review.Customer.HoTen<div class="small text-muted">@review.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</div></td>
+                <td><span class="text-warning">@review.SoSao ★</span></td>
+                <td class="gd3-comment">@review.NhanXet</td>
+                <td><span class="badge @(review.IsVisible ? "bg-success" : "bg-secondary")">@(review.IsVisible ? "Công khai" : "Đã ẩn")</span></td>
+                <td>
+                    <form asp-action="SetVisibility" asp-controller="OrderReview" method="post">
+                        <input type="hidden" name="reviewId" value="@review.Id" />
+                        <input type="hidden" name="visible" value="@(review.IsVisible ? "false" : "true")" />
+                        <input type="hidden" name="stars" value="@Model.Stars" />
+                        <button type="submit" class="btn btn-sm @(review.IsVisible ? "btn-outline-danger" : "btn-outline-success")">@(review.IsVisible ? "Ẩn đánh giá" : "Hiện đánh giá")</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table></div>
+}
+<h4 class="mb-3">Đánh giá Booking cũ (@Model.LegacyReviews.Count)</h4>
+<p class="text-muted small">Dữ liệu Reviews của Booking cũ vẫn được giữ nguyên và chỉ hiển thị để tham khảo. GĐ3 không sửa schema hay trạng thái của các đánh giá lịch sử này.</p>
+@if (Model.LegacyReviews.Count != 0)
+{
+    <div class="table-responsive"><table class="table align-middle">
+        <thead><tr><th>Xe</th><th>Khách</th><th>Sao</th><th>Nhận xét</th><th>Ngày</th></tr></thead>
+        <tbody>
+        @foreach (var review in Model.LegacyReviews)
+        {
+            <tr><td>@review.Vehicle.TenXe</td><td>@review.Customer.HoTen</td><td>@review.SoSao ★</td><td class="gd3-comment">@review.NhanXet</td><td>@review.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td></tr>
+        }
+        </tbody>
+    </table></div>
+}
+<link href="~/css/order-reviews.css" rel="stylesheet" asp-append-version="true" />

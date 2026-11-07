@@ -38,10 +38,7 @@ jobs:
           dotnet restore tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj
           dotnet build tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj -c Release --no-restore
       - name: Initialize DISPOSABLE MySQL from EXISTING migrations
-        working-directory: RentalPlatform
-        run: |
-          dotnet tool restore
-          dotnet tool run dotnet-ef database update --configuration Release
+        run: bash scripts/ci/init-baseline-schema.sh
       - name: Seed disposable payment scenarios
         run: dotnet run --project tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj -c Release --no-build
       - name: Run QR / mobile / API end-to-end smoke

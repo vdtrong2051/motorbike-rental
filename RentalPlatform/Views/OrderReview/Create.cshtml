@@ -1,0 +1,55 @@
+@model RentalPlatform.Models.ViewModels.Review.OrderReviewCreateViewModel
+@using RentalPlatform.Models.Entities
+@{
+    ViewData["Title"] = "Đánh giá xe đã thuê";
+    var item = ViewBag.Item as RentalOrderItem;
+}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card gd3-card">
+            <div class="card-body p-4">
+                <div class="hero-eyebrow">Đánh giá sau chuyến đi</div>
+                <h2 class="mb-2">Đánh giá xe đã thuê</h2>
+                @if (item is not null)
+                {
+                    <p class="text-muted">Xe <strong>@item.TenXe</strong> — @item.BienSo</p>
+                    <p class="small text-muted">Đơn @item.RentalOrder.MaDon · @item.NgayNhanXe.ToString("dd/MM/yyyy") đến @item.NgayTraXe.ToString("dd/MM/yyyy")</p>
+                }
+                <p class="small">Mỗi lần thuê xe chỉ được đánh giá một lần. Điểm sao và nội dung sẽ xuất hiện công khai trên trang xe, trừ khi Admin ẩn đánh giá.</p>
+                <form asp-controller="OrderReview" asp-action="Create" method="post">
+                    <input type="hidden" asp-for="RentalOrderItemId" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <fieldset class="gd3-stars mb-4">
+                        <legend class="form-label fw-bold fs-6">Số sao đánh giá</legend>
+                        <div class="d-flex flex-wrap gap-3">
+                            @for (var n = 1; n <= 5; n++)
+                            {
+                                <label class="gd3-star-option">
+                                    <input type="radio" asp-for="SoSao" value="@n" />
+                                    <span>@n ★</span>
+                                </label>
+                            }
+                        </div>
+                        <span asp-validation-for="SoSao" class="text-danger"></span>
+                    </fieldset>
+                    <div class="mb-4">
+                        <label asp-for="NhanXet" class="form-label fw-bold"></label>
+                        <textarea asp-for="NhanXet" class="form-control" rows="5" maxlength="1000" placeholder="Xe có đúng mô tả? Trải nghiệm thuê xe như thế nào?"></textarea>
+                        <span asp-validation-for="NhanXet" class="text-danger"></span>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                        @if (item is not null)
+                        {
+                            <a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@item.RentalOrderId" class="btn btn-outline-secondary">Quay lại đơn thuê</a>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<link href="~/css/order-reviews.css" rel="stylesheet" asp-append-version="true" />
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
