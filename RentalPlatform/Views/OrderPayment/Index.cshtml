@@ -35,7 +35,11 @@
                     </dl></div>
                 </div>
 
-                @if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
+                @if (Model.TrangThai == TrangThaiDonThue.DaHuy)
+                {
+                    <div class="alert alert-danger" role="status">Đơn thuê đã bị hủy. Mọi giao dịch thanh toán đang chờ đã bị vô hiệu hóa.</div>
+                }
+                else if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
                 {
                     <div class="payment-success text-center py-4">
                         <div class="payment-check">✓</div>
@@ -85,6 +89,10 @@
                 }
                 else
                 {
+                    @if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ThatBai)
+                    {
+                        <div class="alert alert-warning" role="status">Giao dịch trước đã thất bại hoặc hết hạn. Bạn có thể chọn lại phương thức thanh toán.</div>
+                    }
                     <h4 class="mb-3">Chọn phương thức thanh toán</h4>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -133,6 +141,11 @@
                 const response = await fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 if (!response.ok) return;
                 const status = await response.json();
+                if (status.status === 'ThatBai' || status.status === 'DaHoanTien') {
+                    clearInterval(timer);
+                    location.reload();
+                    return;
+                }
                 if (status.paid) {
                     clearInterval(timer);
                     const pending = document.getElementById('paymentPending');

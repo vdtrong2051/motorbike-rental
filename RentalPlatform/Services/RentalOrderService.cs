@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.RentalOrder;
+using RentalPlatform.Services.Payments;
 
 namespace RentalPlatform.Services;
 
@@ -32,11 +33,13 @@ public class RentalOrderService : IRentalOrderService
 {
     private readonly AppDbContext _db;
     private readonly ICartService _cart;
+    private readonly IPaymentCore _paymentCore;
 
-    public RentalOrderService(AppDbContext db, ICartService cart)
+    public RentalOrderService(AppDbContext db, ICartService cart, IPaymentCore paymentCore)
     {
         _db = db;
         _cart = cart;
+        _paymentCore = paymentCore;
     }
 
     public async Task<CheckoutViewModel> BuildCheckoutAsync(Guid customerId)
@@ -195,7 +198,8 @@ public class RentalOrderService : IRentalOrderService
 
     public async Task<RentalOrderOperationResult> CancelAsync(Guid id, Guid currentUserId, string? reason)
     {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        var order = await PaymentCore.LockOrderAsync(_db, id);
         if (order is null || (order.CustomerId != currentUserId && order.OwnerId != currentUserId))
             return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
         if (order.TrangThai is TrangThaiDonThue.DangThue or TrangThaiDonThue.HoanThanh or TrangThaiDonThue.DaHuy)
@@ -209,12 +213,20 @@ public class RentalOrderService : IRentalOrderService
             order.SoTienHoanDuKien = Math.Round(order.TongTien * order.TyLeHoanTien / 100, 0);
             order.TrangThaiThanhToan = TrangThaiThanhToanDon.ChoHoanTien;
         }
+        // Invalidate active attempts while preserving historical paid records for refunds.
+        foreach (var payment in order.Payments.Where(p => p.MaGiaoDich == order.MaThamChieuThanhToan
+            && PaymentCore.IsPending(p.TrangThai)))
+        {
+            payment.TrangThai = TrangThaiThanhToanDon.ThatBai;
+            payment.GhiChuCongThanhToan = "GD1:CANCELLED";
+        }
         order.TrangThai = TrangThaiDonThue.DaHuy;
         order.LyDoHuy = reason?.Trim();
         order.CancelledAt = DateTime.UtcNow;
         order.GhiChu = string.Join(Environment.NewLine, new[] { order.GhiChu, $"Lý do huỷ: {reason}" }.Where(s => !string.IsNullOrWhiteSpace(s)));
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return new(true, Order: order);
     }
 
@@ -241,68 +253,23 @@ public class RentalOrderService : IRentalOrderService
         return new(true, Order: order);
     }
 
-    public async Task<RentalOrderOperationResult> SelectPaymentAsync(Guid id, PhuongThucThanhToanDon method, Guid customerId)
-    {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
-        if (order is null || order.CustomerId != customerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
-        if (order.TrangThai != TrangThaiDonThue.DaXacNhan && order.TrangThai != TrangThaiDonThue.ChoThanhToan)
-            return new(false, "Chủ xe cần xác nhận đơn trước khi thanh toán.");
-        if (order.Contract is null || !order.Contract.DaKyKhach || !order.Contract.DaKyChuXe)
-            return new(false, "Cả khách thuê và chủ xe phải ký hợp đồng trước khi thanh toán.");
-        if (order.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
-            return new(false, "Đơn đã thanh toán.");
+    public Task<RentalOrderOperationResult> SelectPaymentAsync(Guid id, PhuongThucThanhToanDon method, Guid customerId) =>
+        _paymentCore.SelectAsync(id, method, customerId);
 
-        order.PhuongThucThanhToan = method;
-        order.TrangThai = TrangThaiDonThue.ChoThanhToan;
-        order.TrangThaiThanhToan = method == PhuongThucThanhToanDon.ThanhToanKhiNhanXe
-            ? TrangThaiThanhToanDon.ChoThuTienKhiNhanXe : TrangThaiThanhToanDon.ChoThanhToan;
-
-        var payment = new RentalOrderPayment
-        {
-            RentalOrderId = order.Id,
-            MaGiaoDich = $"PAY-{DateTime.UtcNow:yyyyMMddHHmmss}-{Random.Shared.Next(1000, 9999)}",
-            PhuongThuc = method,
-            TrangThai = order.TrangThaiThanhToan,
-            SoTien = order.TongTien
-        };
-        order.MaThamChieuThanhToan = payment.MaGiaoDich;
-        _db.RentalOrderPayments.Add(payment);
-        await _db.SaveChangesAsync();
-        return new(true, Order: order);
-    }
-
-    public async Task<RentalOrderOperationResult> MarkPaidAsync(Guid id, string reference, decimal? receivedAmount = null, string? gatewayNote = null)
-    {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
-        if (order is null) return new(false, "Không tìm thấy đơn.");
-        if (!string.Equals(order.MaThamChieuThanhToan, reference, StringComparison.OrdinalIgnoreCase))
-            return new(false, "Mã tham chiếu thanh toán không khớp.");
-        if (receivedAmount.HasValue && receivedAmount.Value != order.TongTien)
-            return new(false, $"Số tiền nhận được không khớp tổng đơn ({receivedAmount.Value:N0}/{order.TongTien:N0} đ).");
-        if (order.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
-            return new(true, Order: order);
-
-        var payment = order.Payments.OrderByDescending(p => p.CreatedAt)
-            .FirstOrDefault(p => p.MaGiaoDich == reference);
-        if (payment is null) return new(false, "Không tìm thấy giao dịch.");
-        payment.TrangThai = TrangThaiThanhToanDon.DaThanhToan;
-        payment.PaidAt = DateTime.UtcNow;
-        payment.GhiChuCongThanhToan = gatewayNote;
-        order.TrangThaiThanhToan = TrangThaiThanhToanDon.DaThanhToan;
-        order.TrangThai = TrangThaiDonThue.DaThanhToan;
-        order.PaidAt = DateTime.UtcNow;
-        order.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
-        return new(true, Order: order);
-    }
+    // Backwards-compatible webhook entry point. It is NOT callable directly by a Customer.
+    public Task<RentalOrderOperationResult> MarkPaidAsync(Guid id, string reference, decimal? receivedAmount = null, string? gatewayNote = null) =>
+        _paymentCore.ConfirmAsync(id, reference, receivedAmount, PaymentSignalSource.Webhook, gatewayNote);
 
     public async Task<RentalOrderOperationResult> ConfirmCashAsync(Guid id, Guid ownerId)
     {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
-        if (order is null || order.OwnerId != ownerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
-        if (order.TrangThaiThanhToan != TrangThaiThanhToanDon.ChoThuTienKhiNhanXe)
-            return new(false, "Đơn không chọn thanh toán khi nhận xe.");
-        return await MarkPaidAsync(id, order.MaThamChieuThanhToan!, order.TongTien, "Chủ xe xác nhận đã thu tiền khi giao xe.");
+        // Lookup is only a hint; the actual ownership and state checks run under a DB row lock.
+        var details = await _db.RentalOrders.AsNoTracking()
+            .Where(o => o.Id == id && o.OwnerId == ownerId)
+            .Select(o => new { o.MaThamChieuThanhToan, o.TongTien }).FirstOrDefaultAsync();
+        if (details is null || string.IsNullOrWhiteSpace(details.MaThamChieuThanhToan))
+            return new(false, "Không tìm thấy giao dịch thu tiền của chủ xe.");
+        return await _paymentCore.ConfirmAsync(id, details.MaThamChieuThanhToan,
+            details.TongTien, PaymentSignalSource.OwnerCash, "Owner confirmed cash collection", ownerId);
     }
 
     public async Task<RentalOrderOperationResult> HandOverAsync(Guid id, Guid ownerId)

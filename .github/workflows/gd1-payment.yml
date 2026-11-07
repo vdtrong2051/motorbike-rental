@@ -1,0 +1,40 @@
+name: GD1 payment core
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  payment-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: gd1_root_password
+          MYSQL_DATABASE: RentalPlatformDb
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pgd1_root_password"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: 'Server=127.0.0.1;Port=3306;Database=RentalPlatformDb;User=root;Password=gd1_root_password;CharSet=utf8mb4;SslMode=Disabled'
+      Payment__PendingMinutes: '30'
+      Payment__DemoEnabled: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore and compile Payment Core and tests
+        run: |
+          dotnet restore tests/Gd1.Payment.Tests/Gd1.Payment.Tests.csproj
+          dotnet build tests/Gd1.Payment.Tests/Gd1.Payment.Tests.csproj -c Release --no-restore
+      - name: Initialize disposable MySQL with EXISTING baseline migrations
+        working-directory: RentalPlatform
+        run: |
+          dotnet tool restore
+          dotnet tool run dotnet-ef database update --configuration Release
+      - name: Execute actual MySQL payment integration tests
+        run: dotnet run --project tests/Gd1.Payment.Tests/Gd1.Payment.Tests.csproj -c Release --no-build

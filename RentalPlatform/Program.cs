@@ -11,6 +11,7 @@ using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Repositories;
 using RentalPlatform.Services;
+using RentalPlatform.Services.Payments;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +54,9 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IRentalOrderService, RentalOrderService>();
+builder.Services.AddScoped<IPaymentCore, PaymentCore>();
+builder.Services.AddDataProtection();
+builder.Services.AddSingleton<IDemoPaymentTokenService, DemoPaymentTokenService>();
 builder.Services.AddSingleton<IRentalContractWordService, RentalContractWordService>();
 
 // Tăng giới hạn dung lượng request để cho phép upload nhiều ảnh xe (mặc định Kestrel ~28.6MB)

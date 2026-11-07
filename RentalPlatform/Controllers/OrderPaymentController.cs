@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.RentalOrder;
 using RentalPlatform.Services;
+using RentalPlatform.Services.Payments;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace RentalPlatform.Controllers;
 
@@ -13,12 +16,15 @@ public class OrderPaymentController : Controller
     private readonly IRentalOrderService _orders;
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
+    private readonly IPaymentCore _paymentCore;
 
-    public OrderPaymentController(IRentalOrderService orders, IConfiguration configuration, IWebHostEnvironment environment)
+    public OrderPaymentController(IRentalOrderService orders, IConfiguration configuration,
+        IWebHostEnvironment environment, IPaymentCore paymentCore)
     {
         _orders = orders;
         _configuration = configuration;
         _environment = environment;
+        _paymentCore = paymentCore;
     }
 
     [HttpGet]
@@ -79,12 +85,23 @@ public class OrderPaymentController : Controller
     {
         var expectedSecret = _configuration["Payment:WebhookSecret"];
         var suppliedSecret = Request.Headers["X-Webhook-Secret"].ToString();
-        if (string.IsNullOrWhiteSpace(expectedSecret) || !string.Equals(expectedSecret, suppliedSecret, StringComparison.Ordinal))
-            return Unauthorized(new { message = "Invalid webhook secret." });
-        if (!string.Equals(request.Status, "PAID", StringComparison.OrdinalIgnoreCase))
-            return Ok(new { received = true, updated = false });
+        // A placeholder secret must never become an enabled production webhook.
+        if (string.IsNullOrWhiteSpace(expectedSecret) || string.IsNullOrWhiteSpace(suppliedSecret)
+            || expectedSecret.Length < 32
+            || expectedSecret == "change-this-secret-before-production"
+            || !CryptographicOperations.FixedTimeEquals(
+                SHA256.HashData(Encoding.UTF8.GetBytes(expectedSecret)),
+                SHA256.HashData(Encoding.UTF8.GetBytes(suppliedSecret))))
+            return Unauthorized(new { message = "Invalid webhook credentials." });
 
-        var result = await _orders.MarkPaidAsync(request.OrderId, request.Reference, request.Amount, request.GatewayNote);
+        RentalOrderOperationResult result;
+        if (string.Equals(request.Status, "PAID", StringComparison.OrdinalIgnoreCase))
+            result = await _orders.MarkPaidAsync(request.OrderId, request.Reference, request.Amount, request.GatewayNote);
+        else if (string.Equals(request.Status, "FAILED", StringComparison.OrdinalIgnoreCase))
+            result = await _paymentCore.FailAsync(request.OrderId, request.Reference, request.Amount,
+                PaymentSignalSource.Webhook, request.GatewayNote);
+        else
+            return Ok(new { received = true, updated = false });
         return result.Success
             ? Ok(new { received = true, updated = true })
             : BadRequest(new { received = true, updated = false, error = result.Error });
