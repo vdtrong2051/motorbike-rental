@@ -57,10 +57,12 @@ public class OrderPaymentController : Controller
     {
         var order = await _orders.GetDetailAsync(orderId, CurrentUserId);
         if (order is null) return NotFound();
+        Response.Headers.CacheControl = "no-store";
         return Json(new
         {
             paid = order.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan,
             status = order.TrangThaiThanhToan.ToString(),
+            orderStatus = order.TrangThai.ToString(),
             paidAt = order.PaidAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
         });
     }

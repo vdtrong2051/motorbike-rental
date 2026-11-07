@@ -1,0 +1,63 @@
+name: GD2 QR payment
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  qr-payment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: gd2_disposable_root
+          MYSQL_DATABASE: RentalPlatformDb
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pgd2_disposable_root"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://127.0.0.1:5119
+      ConnectionStrings__DefaultConnection: 'Server=127.0.0.1;Port=3306;Database=RentalPlatformDb;User=root;Password=gd2_disposable_root;CharSet=utf8mb4;SslMode=Disabled'
+      Payment__DemoEnabled: 'true'
+      Payment__PublicBaseUrl: http://127.0.0.1:5119
+      GD2_FIXTURE_PATH: /tmp/gd2-fixture.json
+      GD2_TEST_DATABASE: I_UNDERSTAND_DISPOSABLE
+      SeedAdmin__Email: gd2-admin@example.test
+      SeedAdmin__Password: GD2_Admin_Test_2026!
+      SeedAdmin__Name: GD2 Admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore and build GD2 and app
+        run: |
+          dotnet restore tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj
+          dotnet build tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj -c Release --no-restore
+      - name: Initialize DISPOSABLE MySQL from EXISTING migrations
+        working-directory: RentalPlatform
+        run: |
+          dotnet tool restore
+          dotnet tool run dotnet-ef database update --configuration Release
+      - name: Seed disposable payment scenarios
+        run: dotnet run --project tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj -c Release --no-build
+      - name: Run QR / mobile / API end-to-end smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project RentalPlatform/RentalPlatform.csproj -c Release --no-build --no-launch-profile > /tmp/gd2-app.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:5119/ > /dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then cat /tmp/gd2-app.log; exit 1; fi
+          python3 tests/gd2_qr_smoke.py "$GD2_FIXTURE_PATH"
+      - name: Print app log on failure
+        if: failure()
+        run: cat /tmp/gd2-app.log || true

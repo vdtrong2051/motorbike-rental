@@ -1,161 +1,179 @@
 @model RentalOrder
 @inject IConfiguration Configuration
-@inject IWebHostEnvironment Environment
+@inject IWebHostEnvironment Host
 @{
     ViewData["Title"] = "Thanh toán đơn thuê";
+    var demoEnabled = Host.IsDevelopment() || string.Equals(Configuration["Payment:DemoEnabled"], "true", StringComparison.OrdinalIgnoreCase);
+    var currentPayment = Model.Payments.FirstOrDefault(p => p.MaGiaoDich == Model.MaThamChieuThanhToan);
+    var pendingMinutes = int.TryParse(Configuration["Payment:PendingMinutes"], out var ttl) ? Math.Clamp(ttl, 1, 1440) : 30;
+    var expiry = currentPayment is null ? "" : DateTime.SpecifyKind(currentPayment.CreatedAt, DateTimeKind.Utc).AddMinutes(pendingMinutes).ToString("O");
+    var isPending = Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ChoThanhToan;
+    var isFailed = Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ThatBai;
+    var showRealBank = string.Equals(Configuration["Payment:RealBankQrEnabled"], "true", StringComparison.OrdinalIgnoreCase);
     var bankId = Configuration["Payment:BankId"];
     var account = Configuration["Payment:AccountNumber"];
     var accountName = Configuration["Payment:AccountName"];
-    var qrUrl = Model.MaThamChieuThanhToan is null ? null :
-        $"https://img.vietqr.io/image/{bankId}-{account}-compact2.png?amount={Model.TongTien:0}&addInfo={Uri.EscapeDataString(Model.MaThamChieuThanhToan)}&accountName={Uri.EscapeDataString(accountName ?? "")}";
+    var realBankUrl = showRealBank && Model.MaThamChieuThanhToan is not null && !string.IsNullOrWhiteSpace(bankId)
+        && !string.IsNullOrWhiteSpace(account)
+        ? $"https://img.vietqr.io/image/{bankId}-{account}-compact2.png?amount={Model.TongTien:0}&addInfo={Uri.EscapeDataString(Model.MaThamChieuThanhToan)}&accountName={Uri.EscapeDataString(accountName ?? "")}" : null;
 }
-
+<link rel="stylesheet" href="~/css/payment-checkout.css" asp-append-version="true" />
 <div class="checkout-steps mb-4">
     <span class="done">1. Giỏ xe</span><span class="done">2. Thông tin thuê</span><span class="active">3. Thanh toán</span>
 </div>
-
-<div class="row justify-content-center">
-    <div class="col-lg-9">
-        <div class="card">
-            <div class="card-body p-lg-4">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div><div class="hero-eyebrow">Đơn @Model.MaDon</div><h2>Thanh toán</h2></div>
-                    <div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div>
-                </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-7"><h5>Thông tin đơn thuê</h5>
-                        @foreach (var item in Model.Items) { <div class="border-bottom py-2"><strong>@item.TenXe</strong> · @item.BienSo<br/><small>@item.NgayNhanXe.ToString("dd/MM/yyyy HH:mm") → @item.NgayTraXe.ToString("dd/MM/yyyy HH:mm") (@item.SoNgayThue ngày)</small></div> }
-                    </div>
-                    <div class="col-md-5"><dl class="row small">
-                        <dt class="col-7">Tiền thuê</dt><dd class="col-5 text-end">@Model.TienThue.ToString("N0") đ</dd>
-                        <dt class="col-7">Tiền đặt cọc</dt><dd class="col-5 text-end">@Model.TienDatCoc.ToString("N0") đ</dd>
-                        <dt class="col-7">Phí dịch vụ</dt><dd class="col-5 text-end">@Model.PhiDichVu.ToString("N0") đ</dd>
-                        <dt class="col-7">Tổng thanh toán</dt><dd class="col-5 text-end fw-bold">@Model.TongTien.ToString("N0") đ</dd>
-                    </dl></div>
-                </div>
-
+<div class="gd2-payment" data-gd2-payment
+     data-order-id="@Model.Id" data-status-url="@Url.Action("Status", "OrderPayment", new { orderId = Model.Id })"
+     data-expires-at="@expiry" data-pending="@(isPending ? "true" : "false")">
+    <div class="gd2-heading">
+        <div><p class="gd2-eyebrow">THANH TOÁN ĐƠN THUÊ</p><h2>@Model.MaDon</h2>
+            <p class="gd2-subtitle">Mọi phương thức mô phỏng chỉ dùng để thử nghiệm. Không phát sinh chuyển tiền thật.</p></div>
+        <span class="gd2-amount">@Model.TongTien.ToString("N0") đ</span>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <section class="gd2-card" aria-labelledby="gd2-order-heading">
+                <h4 id="gd2-order-heading">Chi tiết đơn thuê</h4>
+                @foreach (var item in Model.Items)
+                {
+                    <div class="gd2-vehicle"><strong>@item.TenXe</strong><div class="small text-muted">@item.BienSo · @item.SoNgayThue ngày</div>
+                        <div class="small">@item.NgayNhanXe.ToString("dd/MM/yyyy HH:mm") → @item.NgayTraXe.ToString("dd/MM/yyyy HH:mm")</div></div>
+                }
+                <dl class="gd2-costs">
+                    <div><dt>Tiền thuê</dt><dd>@Model.TienThue.ToString("N0") đ</dd></div>
+                    <div><dt>Tiền đặt cọc</dt><dd>@Model.TienDatCoc.ToString("N0") đ</dd></div>
+                    <div><dt>Phí dịch vụ</dt><dd>@Model.PhiDichVu.ToString("N0") đ</dd></div>
+                    <div class="gd2-cost-total"><dt>Tổng thanh toán</dt><dd>@Model.TongTien.ToString("N0") đ</dd></div>
+                </dl>
+            </section>
+            <a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@Model.Id" class="gd2-back">← Trở về chi tiết đơn thuê</a>
+        </div>
+        <div class="col-lg-7">
+            <section class="gd2-card" aria-labelledby="gd2-pay-heading">
+                <h4 id="gd2-pay-heading">Phương thức và trạng thái</h4>
                 @if (Model.TrangThai == TrangThaiDonThue.DaHuy)
                 {
-                    <div class="alert alert-danger" role="status">Đơn thuê đã bị hủy. Mọi giao dịch thanh toán đang chờ đã bị vô hiệu hóa.</div>
+                    <div class="alert alert-danger" role="status">Đơn đã hủy. Các yêu cầu thanh toán đang chờ đều mất hiệu lực.</div>
                 }
                 else if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
                 {
-                    <div class="payment-success text-center py-4">
-                        <div class="payment-check">✓</div>
-                        <h3>Đã thanh toán</h3>
-                        <p>Hệ thống đã ghi nhận giao dịch lúc @Model.PaidAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</p>
-                        <a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary">Xem đơn thuê</a>
-                    </div>
+                    <div class="gd2-success" role="status"><span class="gd2-icon">✓</span><h3>Đã thanh toán</h3>
+                        <p>Hệ thống đã ghi nhận giao dịch @Model.PaidAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm").</p>
+                        <a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary">Xem đơn thuê</a></div>
                 }
-                else if (Model.PhuongThucThanhToan == PhuongThucThanhToanDon.ChuyenKhoan && qrUrl is not null)
+                else if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ChoThuTienKhiNhanXe)
                 {
-                    <div class="row align-items-center g-4">
-                        <div class="col-md-6 text-center">
-                            <img src="@qrUrl" class="payment-qr" alt="QR chuyển khoản cho đơn @Model.MaDon" />
+                    <div class="gd2-message gd2-info"><h5>Thanh toán khi nhận xe</h5>
+                        <p>Chủ xe sẽ xác nhận đã thu đủ <strong>@Model.TongTien.ToString("N0") đ</strong> trước khi bàn giao. Khách thuê không thể tự đánh dấu đã trả tiền mặt.</p></div>
+                }
+                else if (Model.TrangThaiThanhToan is TrangThaiThanhToanDon.ChoHoanTien or TrangThaiThanhToanDon.DaHoanTien)
+                {
+                    <div class="alert alert-info">Đơn đang được xử lý hoàn tiền hoặc đã hoàn tiền.</div>
+                }
+                else if (isPending)
+                {
+                    <div class="gd2-message gd2-warning" role="status" aria-live="polite" id="gd2-status-message">
+                        <strong>Đang chờ thanh toán</strong><span class="gd2-wait-dot"></span>
+                        <p>Trang sẽ tự kiểm tra kết quả và cập nhật khi nhận được xác nhận.</p>
+                        <div>Thời hạn còn lại: <strong id="gd2-timer">--:--</strong></div>
+                    </div>
+                    @if (currentPayment is not null)
+                    {
+                        <p class="gd2-reference">Mã giao dịch: <code>@currentPayment.MaGiaoDich</code></p>
+                    }
+                    @if (demoEnabled && (Model.PhuongThucThanhToan is PhuongThucThanhToanDon.ChuyenKhoan
+                        or PhuongThucThanhToanDon.ViDienTu or PhuongThucThanhToanDon.TheThanhToan))
+                    {
+                        <div class="gd2-demo-block">
+                            <div class="gd2-demo-label">DEMO — KHÔNG CHUYỂN TIỀN THẬT</div>
+                            <h5>@(Model.PhuongThucThanhToan == PhuongThucThanhToanDon.ChuyenKhoan ? "Quét QR demo để thanh toán" :
+                                Model.PhuongThucThanhToan == PhuongThucThanhToanDon.ViDienTu ? "Ví điện tử demo" : "Thẻ thanh toán demo")</h5>
+                            <div class="gd2-qr-layout">
+                                <div class="gd2-qr-frame"><img src="@Url.Action("Qr", "PaymentDemo", new { orderId = Model.Id })"
+                                    alt="QR mô phỏng dành cho đơn thuê @Model.MaDon" loading="eager" class="gd2-qr-img" /></div>
+                                <div><p>Dùng camera điện thoại quét mã QR, mở trang thanh toán và nhấn <strong>Xác nhận thanh toán DEMO</strong>.</p>
+                                    <p class="small text-muted">Có thể sử dụng ngay trên thiết bị hiện tại. Khi xác nhận, màn hình này sẽ tự cập nhật.</p>
+                                    <a class="btn btn-primary" asp-controller="PaymentDemo" asp-action="Start" asp-route-orderId="@Model.Id">Thanh toán DEMO trên thiết bị này</a>
+                                    <p class="small text-muted mt-2">Nếu mã QR không hiển thị hoặc điện thoại không mở được, kiểm tra địa chỉ <code>Payment__PublicBaseUrl</code>.</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <h4>Quét QR bằng ứng dụng ngân hàng</h4>
-                            <dl class="order-info">
-                                <dt>Ngân hàng</dt><dd>@bankId</dd>
-                                <dt>Số tài khoản</dt><dd class="text-mono">@account</dd>
-                                <dt>Chủ tài khoản</dt><dd>@accountName</dd>
-                                <dt>Nội dung bắt buộc</dt><dd class="text-mono">@Model.MaThamChieuThanhToan</dd>
-                            </dl>
-                            <div id="paymentPending" class="alert alert-warning">Đang chờ cổng thanh toán xác nhận… Trang sẽ tự cập nhật.</div>
-                            @if (Environment.IsDevelopment())
+                    }
+                    else if (!demoEnabled && (Model.PhuongThucThanhToan is PhuongThucThanhToanDon.ViDienTu
+                        or PhuongThucThanhToanDon.TheThanhToan))
+                    {
+                        <div class="alert alert-warning">Môi trường hiện tại chưa bật cổng thanh toán mô phỏng. Chức năng ví/thẻ chờ kết nối nhà cung cấp thanh toán thực tế.</div>
+                    }
+                    @if (Model.PhuongThucThanhToan == PhuongThucThanhToanDon.ChuyenKhoan && realBankUrl is not null)
+                    {
+                        <details class="gd2-realbank"><summary>VietQR ngân hàng (không tự xác nhận)</summary>
+                            <div class="alert alert-warning small mt-2">Chỉ chuyển tiền khi thông tin đã được người quản trị xác nhận. Đây không phải là QR DEMO; không có xác nhận từ ngân hàng thì trạng thái vẫn chờ.</div>
+                            <img src="@realBankUrl" alt="QR chuyển khoản VietQR" class="gd2-qr-img" />
+                            <p>@bankId · @account · @accountName</p>
+                        </details>
+                    }
+                    <details class="gd2-switch"><summary>Đổi phương thức thanh toán</summary>
+                        <p class="small text-muted">Phiên thanh toán đang chờ sẽ bị vô hiệu hóa khi bạn chọn phương thức khác.</p>
+                        <div class="gd2-method-grid">
+                            @foreach (var method in new[] { PhuongThucThanhToanDon.ChuyenKhoan, PhuongThucThanhToanDon.ViDienTu,
+                                PhuongThucThanhToanDon.TheThanhToan, PhuongThucThanhToanDon.ThanhToanKhiNhanXe })
                             {
-                                <form asp-action="SimulatePaid" method="post">
-                                    <input type="hidden" name="orderId" value="@Model.Id" />
-                                    <button class="btn btn-outline-secondary btn-sm">Mô phỏng webhook đã thanh toán (Development)</button>
+                                <form asp-action="Select" method="post">
+                                    <input type="hidden" name="OrderId" value="@Model.Id" />
+                                    <input type="hidden" name="PhuongThuc" value="@method" />
+                                    <button class="btn btn-outline-secondary w-100" type="submit">@MethodName(method)</button>
                                 </form>
                             }
                         </div>
-                    </div>
-                }
-                else if (Model.PhuongThucThanhToan is PhuongThucThanhToanDon.ViDienTu or PhuongThucThanhToanDon.TheThanhToan)
-                {
-                    <div class="alert alert-warning"><h5>Đang chờ cổng thanh toán</h5>
-                        Giao dịch <strong>@Model.MaThamChieuThanhToan</strong> đã được ghi nhận. Cổng ví/thẻ cần gọi webhook của hệ thống để xác nhận thanh toán.
-                    </div>
-                }
-                else if (Model.PhuongThucThanhToan == PhuongThucThanhToanDon.ThanhToanKhiNhanXe)
-                {
-                    <div class="alert alert-info">
-                        <h5>Thanh toán khi nhận xe</h5>
-                        Bạn sẽ thanh toán <strong>@Model.TongTien.ToString("N0") đ</strong> cho chủ xe khi nhận. Chủ xe sẽ xác nhận đã thu tiền trên hệ thống trước khi bàn giao.
-                    </div>
-                    <a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary">Quay lại đơn thuê</a>
+                    </details>
+                    <form asp-action="Select" method="post" id="gd2-retry" class="mt-3" hidden>
+                        <input type="hidden" name="OrderId" value="@Model.Id" />
+                        <input type="hidden" name="PhuongThuc" value="@Model.PhuongThucThanhToan" />
+                        <button type="submit" class="btn btn-warning">Tạo giao dịch mới sau khi hết hạn</button>
+                    </form>
                 }
                 else
                 {
-                    @if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ThatBai)
+                    @if (isFailed)
                     {
-                        <div class="alert alert-warning" role="status">Giao dịch trước đã thất bại hoặc hết hạn. Bạn có thể chọn lại phương thức thanh toán.</div>
+                        <div class="alert alert-warning" role="status">Lần thanh toán trước đã thất bại hoặc hết hạn. Vui lòng chọn phương thức để thử lại.</div>
                     }
-                    <h4 class="mb-3">Chọn phương thức thanh toán</h4>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <form asp-action="Select" method="post" class="payment-method-card">
-                                <input type="hidden" name="OrderId" value="@Model.Id" />
-                                <input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ChuyenKhoan" />
-                                <div class="fs-2">▦</div><h5>Chuyển khoản QR</h5>
-                                <p class="text-muted">Quét QR, nhận webhook và tự động cập nhật trạng thái.</p>
-                                <button class="btn btn-primary w-100">Tạo mã QR</button>
-                            </form>
-                        </div>
-                        <div class="col-md-6">
-                            <form asp-action="Select" method="post" class="payment-method-card">
-                                <input type="hidden" name="OrderId" value="@Model.Id" /><input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ViDienTu" />
-                                <h5>Ví điện tử</h5><p class="text-muted">Tạo giao dịch chờ xác nhận từ cổng ví điện tử.</p><button class="btn btn-outline-primary w-100">Chọn ví điện tử</button>
-                            </form>
-                        </div>
-                        <div class="col-md-6">
-                            <form asp-action="Select" method="post" class="payment-method-card">
-                                <input type="hidden" name="OrderId" value="@Model.Id" /><input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.TheThanhToan" />
-                                <h5>Thẻ thanh toán</h5><p class="text-muted">Tạo giao dịch chờ xác nhận từ cổng thẻ.</p><button class="btn btn-outline-primary w-100">Chọn thẻ</button>
-                            </form>
-                        </div>
-                        <div class="col-md-6">
-                            <form asp-action="Select" method="post" class="payment-method-card">
-                                <input type="hidden" name="OrderId" value="@Model.Id" />
-                                <input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ThanhToanKhiNhanXe" />
-                                <div class="fs-2">▤</div><h5>Thanh toán khi nhận xe</h5>
-                                <p class="text-muted">Chủ xe xác nhận thu tiền trước khi bàn giao xe.</p>
-                                <button class="btn btn-outline-primary w-100">Chọn phương thức này</button>
-                            </form>
-                        </div>
+                    <p class="small text-muted">Chọn một trong các phương thức dưới đây. Giao dịch demo không yêu cầu tài khoản ví hoặc thẻ thật.</p>
+                    <div class="gd2-method-grid">
+                        <form asp-action="Select" method="post" class="gd2-method">
+                            <input type="hidden" name="OrderId" value="@Model.Id" />
+                            <input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ChuyenKhoan" />
+                            <span class="gd2-method-icon">▦</span><strong>QR chuyển khoản</strong><small>QR demo / VietQR nếu được cấu hình</small><button type="submit" class="btn btn-primary w-100">Chọn QR</button>
+                        </form>
+                        <form asp-action="Select" method="post" class="gd2-method">
+                            <input type="hidden" name="OrderId" value="@Model.Id" />
+                            <input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ViDienTu" />
+                            <span class="gd2-method-icon">◈</span><strong>Ví điện tử</strong><small>Trải nghiệm ví mô phỏng</small><button type="submit" class="btn btn-outline-primary w-100">Chọn ví</button>
+                        </form>
+                        <form asp-action="Select" method="post" class="gd2-method">
+                            <input type="hidden" name="OrderId" value="@Model.Id" />
+                            <input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.TheThanhToan" />
+                            <span class="gd2-method-icon">▤</span><strong>Thẻ thanh toán</strong><small>Không nhập thông tin thẻ thật</small><button type="submit" class="btn btn-outline-primary w-100">Chọn thẻ</button>
+                        </form>
+                        <form asp-action="Select" method="post" class="gd2-method">
+                            <input type="hidden" name="OrderId" value="@Model.Id" />
+                            <input type="hidden" name="PhuongThuc" value="@PhuongThucThanhToanDon.ThanhToanKhiNhanXe" />
+                            <span class="gd2-method-icon">₫</span><strong>Tiền mặt</strong><small>Chủ xe xác nhận khi nhận xe</small><button type="submit" class="btn btn-outline-primary w-100">Chọn tiền mặt</button>
+                        </form>
                     </div>
                 }
-            </div>
+            </section>
         </div>
     </div>
 </div>
-
-@if (Model.TrangThaiThanhToan == TrangThaiThanhToanDon.ChoThanhToan)
-{
-    @section Scripts {
-        <script>
-            const statusUrl = '@Url.Action("Status", new { orderId = Model.Id })';
-            const timer = setInterval(async () => {
-                const response = await fetch(statusUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                if (!response.ok) return;
-                const status = await response.json();
-                if (status.status === 'ThatBai' || status.status === 'DaHoanTien') {
-                    clearInterval(timer);
-                    location.reload();
-                    return;
-                }
-                if (status.paid) {
-                    clearInterval(timer);
-                    const pending = document.getElementById('paymentPending');
-                    if (pending) {
-                        pending.className = 'alert alert-success';
-                        pending.textContent = 'Đã nhận thông báo thanh toán. Đang cập nhật…';
-                    }
-                    setTimeout(() => location.reload(), 900);
-                }
-            }, 3000);
-        </script>
-    }
+@functions {
+    private static string MethodName(PhuongThucThanhToanDon method) => method switch
+    {
+        PhuongThucThanhToanDon.ChuyenKhoan => "QR chuyển khoản",
+        PhuongThucThanhToanDon.ViDienTu => "Ví điện tử",
+        PhuongThucThanhToanDon.TheThanhToan => "Thẻ thanh toán",
+        _ => "Tiền mặt"
+    };
+}
+@section Scripts {
+    <script src="~/js/payment-checkout.js" asp-append-version="true"></script>
 }

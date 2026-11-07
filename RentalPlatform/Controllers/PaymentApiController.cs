@@ -59,6 +59,7 @@ public sealed class PaymentApiController : ControllerBase
         {
             orderId = order.Id,
             status = order.TrangThaiThanhToan.ToString(),
+            orderStatus = order.TrangThai.ToString(),
             paid = order.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan,
             method = order.PhuongThucThanhToan?.ToString(),
             reference = order.MaThamChieuThanhToan,

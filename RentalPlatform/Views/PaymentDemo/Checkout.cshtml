@@ -1,0 +1,53 @@
+@model RentalPlatform.Models.ViewModels.PaymentDemo.PaymentDemoCheckoutViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Xác nhận thanh toán mô phỏng";
+}
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Thanh toán DEMO — Motorbike Rental</title>
+    <link rel="stylesheet" href="~/css/payment-demo.css" asp-append-version="true" />
+    <script src="~/js/payment-demo.js" asp-append-version="true" defer></script>
+</head>
+<body>
+    <main class="demo-shell" data-gd2-demo data-valid="@(Model.IsValid ? "true" : "false")"
+          data-payment-token="@Model.Token" data-payment-submit="/api/payments/demo/complete"
+          data-expires-at="@Model.ExpiresAtUtc.ToString("O")">
+        <div class="demo-brand">MOTORBIKE RENTAL <span>· DEMO</span></div>
+        <section class="demo-panel" aria-labelledby="demo-title">
+            <p class="demo-kicker">MÔ PHỎNG — KHÔNG CHUYỂN TIỀN THẬT</p>
+            @if (!Model.IsValid)
+            {
+                <h1 id="demo-title">Liên kết không còn hiệu lực</h1>
+                <p class="demo-muted">@Model.Message</p>
+                <p class="demo-muted">Vui lòng quay lại trang thanh toán trên máy tính và tạo giao dịch mới.</p>
+            }
+            else
+            {
+                <h1 id="demo-title">Xác nhận thanh toán</h1>
+                <p class="demo-muted">Kiểm tra thông tin trước khi xác nhận giao dịch thử nghiệm.</p>
+                <dl class="demo-info">
+                    <div><dt>Đơn thuê</dt><dd>@Model.OrderCode</dd></div>
+                    <div><dt>Phương thức</dt><dd>@Model.Method</dd></div>
+                    <div><dt>Mã giao dịch</dt><dd class="demo-reference">@Model.Reference</dd></div>
+                </dl>
+                <div class="demo-total">
+                    <span>Số tiền giả lập</span>
+                    <strong>@Model.Amount.ToString("N0") đ</strong>
+                </div>
+                <p class="demo-expiry">Phiên hết hạn sau <strong id="demo-countdown">--:--</strong></p>
+                <div id="demo-result" class="demo-result" role="status" aria-live="polite" hidden></div>
+                <div id="demo-actions" class="demo-actions">
+                    <button type="button" id="demo-pay" class="demo-btn demo-btn-primary">Xác nhận thanh toán DEMO</button>
+                    <button type="button" id="demo-fail" class="demo-btn demo-btn-secondary">Mô phỏng thất bại</button>
+                </div>
+                <p class="demo-footnote">Đây chỉ là thao tác kiểm thử phần mềm, không phát sinh giao dịch ngân hàng, ví hoặc thẻ thật.</p>
+            }
+        </section>
+    </main>
+</body>
+</html>
