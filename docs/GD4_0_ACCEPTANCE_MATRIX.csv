@@ -1,0 +1,27 @@
+﻿ID,Priority,Role,Scenario,TestSteps,Expected,Phase
+UX-01,P0,Guest,Search discovery,"Visit home, set area and dates, open vehicle search",Retains dates/filter; availability aligned server-side,4.2
+UX-02,P0,Guest,View detail then sign in,"View vehicle, click rent, sign in","Returns to appropriate intended route, no lost context",4.2/4.3
+UX-03,P0,Customer,One-owner cart,Add vehicle from Owner A then add Owner B,Explains restriction before rejection and preserves existing cart,4.3
+UX-04,P0,Customer,Checkout multi item,Checkout 2 vehicles Owner A; set valid distinct time windows,"Per-item price summary, verified profile guidance, no duplicate submission",4.3
+UX-05,P0,Customer,Not verified,Attempt transaction with incomplete profile,"Contextual CTA to Profile/verification, keep browsing context",4.3
+UX-06,P0,Owner,Order acceptance,Find pending order and confirm,Owner sees one primary actionable CTA; unrelated owner forbidden,4.4
+UX-07,P0,Customer/Owner,Contract signing,"One party signs, other party still pending","Show who signed, who is next; no fake signed state",4.3/4.4
+UX-08,P0,Customer,DEMO QR paid,"Create payment attempt, scan on phone, complete","Clear DEMO labeling, desktop updates, cannot reuse token",4.3
+UX-09,P0,Customer,Payment failed/retry,"Fail payment, choose alternate method","Explain failure, do not reuse superseded token, show next action",4.3
+UX-10,P0,Owner,Cash confirmation,Owner confirms actual collection,No self-confirmation by Customer; confirmation clear,4.4
+UX-11,P0,Owner,Hand-over + return,"Hand over after paid, mark received back",No invalid state jumps; user understands next step,4.4
+UX-12,P0,Customer,Completed reviews,Review each of 2 items then revisit,One per item; previously reviewed badge; correct vehicle rating,4.3
+UX-13,P0,Customer/Owner,Cancellation/refund,Cancel before and after payment,"Clear refund expectation and policy, existing state respected",4.3/4.4
+UX-14,P0,Admin,Permissions,Browse admin route as customer/owner,Access denied; hidden menu NOT sole authorization control,4.5
+UX-15,P0,Admin,Identity protection,View CCCD from own admin area,"No direct public exposure; auth, headers, caching preserved",4.5
+UX-16,P0,Admin,Moderation,"Hide review, view public page, restore","Rating and content update correctly, old booking reviews untouched",4.5
+UX-17,P0,Customer/Owner,Legacy Booking,"Open existing Booking, contract, legacy Review",Routes and permissions still functional,4.6
+UX-18,P1,Guest,Mobile discovery,"375px width, filter drawer, clear filters",No sideways overflow; keyboard and tap targets usable,4.2/4.6
+UX-19,P1,Customer,Mobile checkout,"375px width, fill personal fields and dates","Errors bound to inputs, summary visible, focus on first invalid field",4.3/4.6
+UX-20,P1,Owner,Operational dashboard,"Land after login, pending orders",Pending actions surfaced; no dead-end Home navigation,4.4
+UX-21,P1,Admin,Table workflows,Filter pending vehicles and users,"Clear active filters, empty state, accessible actions",4.5
+UX-22,P1,All,State messages,Success/fail/empty/loading/offline,"Role-appropriate content, no generic enum-only messaging",4.6
+UX-23,P1,All,Keyboard/mobile nav,Navigate menu/modals with keyboard,"Visible focus, Escape/offcanvas behavior, labels",4.6
+UX-24,P1,All,Responsive suite,"Test widths 375,768,1024,1440","No unintended horizontal overflow, target screens usable",4.6
+UX-25,P1,All,Reduced motion,Enable prefers-reduced-motion,Nonessential animation suppressed,4.6
+UX-26,P0,All,Regression CI,Push UI changes develop,GD0/GD1/GD2/GD3 and GD4 checks PASS,4.7

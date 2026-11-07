@@ -1,0 +1,39 @@
+﻿Method,RoutePattern,Access,RazorView,UserIntent,Journey,TargetPhase,Disposition
+GET,/,Public,Home/Index,"Vào marketplace, bắt đầu tìm xe",Discovery,4.2,active
+GET,/Home/Error,Public,Home/Error,Thông báo lỗi thân thiện,Cross-cutting,4.6,active
+GET,/Account/Register,Public,Account/Register,Đăng ký Customer/Owner,Onboarding,4.3,active
+GET,/Account/Login,Public,Account/Login,"Đăng nhập, tôn trọng returnUrl",Onboarding,4.3,active
+GET,/Account/AccessDenied,Public,Account/AccessDenied,Giải thích thiếu quyền,Cross-cutting,4.6,active
+GET,/Account/Profile,Authenticated,Account/Profile,Cập nhật và xác thực hồ sơ,Onboarding,4.3,active
+GET,/Vehicle/Index,Public,Vehicle/Index,"Tìm, lọc, so sánh xe",Discovery,4.2,active
+GET,/Vehicle/Details/{id},Public,Vehicle/Details,"Ảnh, giá, thông tin, đánh giá và CTA",Discovery,4.2,active
+GET,/Vehicle/Create,Owner,Vehicle/Create,Đăng xe mới,Supply,4.4,active
+GET,/Vehicle/Edit/{id},Owner (object ownership),Vehicle/Edit,Sửa thông tin/ảnh xe thuộc Owner,Supply,4.4,active
+GET,/Vehicle/MyVehicles,Owner,Vehicle/MyVehicles,Danh sách xe của Owner,Supply,4.4,active
+GET,/Cart/Index,Customer,Cart/Index,Quản lý giỏ cùng Owner,Checkout,4.3,active
+GET,/RentalOrder/Checkout,Customer,RentalOrder/Checkout,Nhập thông tin và thời gian từng xe,Checkout,4.3,active
+GET,/RentalOrder/MyOrders,Customer,RentalOrder/MyOrders,Theo dõi đơn thuê của mình,Trip,4.3,active
+GET,/RentalOrder/OwnerOrders,Owner,RentalOrder/OwnerOrders,Quản lý đơn thuê cùng Owner,Operations,4.4,active
+GET,/RentalOrder/Details/{id},Authenticated (order participant/Admin),RentalOrder/Details,"Trạng thái hợp đồng, thanh toán, giao trả, đánh giá",Trip/Operations,4.3/4.4,active
+GET,/OrderPayment/Index?orderId=,Customer (order ownership),OrderPayment/Index,Chọn và theo dõi thanh toán,Payment,4.3,active
+GET,/PaymentDemo/Checkout?token=,Anonymous with signed token,PaymentDemo/Checkout,Trang xác nhận QR DEMO trên điện thoại,Payment,4.3,active
+GET,/OrderReview/Create?itemId=,Customer (completed own item),OrderReview/Create,Đánh giá một xe đã thuê,Trip,4.3,active
+GET,/OrderReview/OwnerReviews,Owner,OrderReview/OwnerReviews,Xem đánh giá xe thuộc Owner,Operations,4.4,active
+GET,/OrderReview/AdminReviews,Admin,OrderReview/AdminReviews,"Lọc, ẩn/hiện review mới",Moderation,4.5,active
+GET,/OwnerPortal/Dashboard,Owner,OwnerPortal/Dashboard,Tổng quan doanh thu/vận hành,Operations,4.4,active
+GET,/OwnerPortal/Calendar,Owner,OwnerPortal/Calendar,Lịch thuê dạng calendar,Operations,4.4,active
+GET,/Admin/Dashboard,Admin,Admin/Dashboard,Tổng quan vận hành/quản trị,Admin,4.5,active
+GET,/Admin/PendingVehicles,Admin,Admin/PendingVehicles,Duyệt hoặc từ chối xe,Admin,4.5,active
+GET,/Admin/Vehicles,Admin,Admin/Vehicles,Quản lý trạng thái xe,Admin,4.5,active
+GET,/Admin/Users,Admin,Admin/Users,"Xác thực, khóa/mở khóa người dùng",Admin,4.5,active
+GET,/Admin/Payments,Admin,Admin/Payments,"Đối soát, hoàn tiền",Admin,4.5,active
+GET,/Admin/Violations,Admin,Admin/Violations,Xử lý báo cáo vi phạm,Admin,4.5,active
+GET,/Admin/Policies,Admin,Admin/Policies,Điều chỉnh chính sách,Admin,4.5,active
+GET,/Violation/Report?orderId=,Authenticated participant,Violation/Report,Báo cáo vi phạm từ đơn thuê,Support,4.3/4.4,active
+GET,/Violation/MyReports,Authenticated,Violation/MyReports,Theo dõi báo cáo đã gửi,Support,4.3/4.4,active
+GET,/Booking/Create?vehicleId=,Customer,Booking/Create,Đặt một xe theo luồng Booking cũ,Legacy,4.6,legacy-preserve
+GET,/Booking/Details/{id},Authenticated (booking scope),Booking/Details,Chi tiết Booking cũ,Legacy,4.6,legacy-preserve
+GET,/Booking/MyBookings,Authenticated,Booking/MyBookings,Danh sách Booking cũ,Legacy,4.6,legacy-preserve
+GET,/Booking/Requests,Owner,Booking/Requests,Owner xử lý yêu cầu Booking cũ,Legacy,4.6,legacy-preserve
+GET,/Contract/Details?bookingId=,Authenticated (booking scope),Contract/Details,Hợp đồng Booking cũ,Legacy,4.6,legacy-preserve
+GET,/Review/Create?bookingId=,Customer (own completed Booking),Review/Create,Review Booking cũ,Legacy,4.6,legacy-preserve

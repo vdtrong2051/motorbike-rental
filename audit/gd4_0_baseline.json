@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "stage": "GD4.0",
+  "base_commit": "22b7263320de2ec2e56228146042eaec01fffc86",
+  "base_branch": "develop",
+  "inventory_scope": "GET Razor page candidates (not all endpoints)",
+  "views": [
+    {
+      "method": "GET",
+      "route": "/",
+      "access": "Public",
+      "view": "Home/Index",
+      "user_intent": "Vào marketplace, bắt đầu tìm xe",
+      "journey": "Discovery",
+      "phase": "4.2",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Home/Error",
+      "access": "Public",
+      "view": "Home/Error",
+      "user_intent": "Thông báo lỗi thân thiện",
+      "journey": "Cross-cutting",
+      "phase": "4.6",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Account/Register",
+      "access": "Public",
+      "view": "Account/Register",
+      "user_intent": "Đăng ký Customer/Owner",
+      "journey": "Onboarding",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Account/Login",
+      "access": "Public",
+      "view": "Account/Login",
+      "user_intent": "Đăng nhập, tôn trọng returnUrl",
+      "journey": "Onboarding",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Account/AccessDenied",
+      "access": "Public",
+      "view": "Account/AccessDenied",
+      "user_intent": "Giải thích thiếu quyền",
+      "journey": "Cross-cutting",
+      "phase": "4.6",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Account/Profile",
+      "access": "Authenticated",
+      "view": "Account/Profile",
+      "user_intent": "Cập nhật và xác thực hồ sơ",
+      "journey": "Onboarding",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Vehicle/Index",
+      "access": "Public",
+      "view": "Vehicle/Index",
+      "user_intent": "Tìm, lọc, so sánh xe",
+      "journey": "Discovery",
+      "phase": "4.2",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Vehicle/Details/{id}",
+      "access": "Public",
+      "view": "Vehicle/Details",
+      "user_intent": "Ảnh, giá, thông tin, đánh giá và CTA",
+      "journey": "Discovery",
+      "phase": "4.2",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Vehicle/Create",
+      "access": "Owner",
+      "view": "Vehicle/Create",
+      "user_intent": "Đăng xe mới",
+      "journey": "Supply",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Vehicle/Edit/{id}",
+      "access": "Owner (object ownership)",
+      "view": "Vehicle/Edit",
+      "user_intent": "Sửa thông tin/ảnh xe thuộc Owner",
+      "journey": "Supply",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Vehicle/MyVehicles",
+      "access": "Owner",
+      "view": "Vehicle/MyVehicles",
+      "user_intent": "Danh sách xe của Owner",
+      "journey": "Supply",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Cart/Index",
+      "access": "Customer",
+      "view": "Cart/Index",
+      "user_intent": "Quản lý giỏ cùng Owner",
+      "journey": "Checkout",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/RentalOrder/Checkout",
+      "access": "Customer",
+      "view": "RentalOrder/Checkout",
+      "user_intent": "Nhập thông tin và thời gian từng xe",
+      "journey": "Checkout",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/RentalOrder/MyOrders",
+      "access": "Customer",
+      "view": "RentalOrder/MyOrders",
+      "user_intent": "Theo dõi đơn thuê của mình",
+      "journey": "Trip",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/RentalOrder/OwnerOrders",
+      "access": "Owner",
+      "view": "RentalOrder/OwnerOrders",
+      "user_intent": "Quản lý đơn thuê cùng Owner",
+      "journey": "Operations",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/RentalOrder/Details/{id}",
+      "access": "Authenticated (order participant/Admin)",
+      "view": "RentalOrder/Details",
+      "user_intent": "Trạng thái hợp đồng, thanh toán, giao trả, đánh giá",
+      "journey": "Trip/Operations",
+      "phase": "4.3/4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/OrderPayment/Index?orderId=",
+      "access": "Customer (order ownership)",
+      "view": "OrderPayment/Index",
+      "user_intent": "Chọn và theo dõi thanh toán",
+      "journey": "Payment",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/PaymentDemo/Checkout?token=",
+      "access": "Anonymous with signed token",
+      "view": "PaymentDemo/Checkout",
+      "user_intent": "Trang xác nhận QR DEMO trên điện thoại",
+      "journey": "Payment",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/OrderReview/Create?itemId=",
+      "access": "Customer (completed own item)",
+      "view": "OrderReview/Create",
+      "user_intent": "Đánh giá một xe đã thuê",
+      "journey": "Trip",
+      "phase": "4.3",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/OrderReview/OwnerReviews",
+      "access": "Owner",
+      "view": "OrderReview/OwnerReviews",
+      "user_intent": "Xem đánh giá xe thuộc Owner",
+      "journey": "Operations",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/OrderReview/AdminReviews",
+      "access": "Admin",
+      "view": "OrderReview/AdminReviews",
+      "user_intent": "Lọc, ẩn/hiện review mới",
+      "journey": "Moderation",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/OwnerPortal/Dashboard",
+      "access": "Owner",
+      "view": "OwnerPortal/Dashboard",
+      "user_intent": "Tổng quan doanh thu/vận hành",
+      "journey": "Operations",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/OwnerPortal/Calendar",
+      "access": "Owner",
+      "view": "OwnerPortal/Calendar",
+      "user_intent": "Lịch thuê dạng calendar",
+      "journey": "Operations",
+      "phase": "4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/Dashboard",
+      "access": "Admin",
+      "view": "Admin/Dashboard",
+      "user_intent": "Tổng quan vận hành/quản trị",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/PendingVehicles",
+      "access": "Admin",
+      "view": "Admin/PendingVehicles",
+      "user_intent": "Duyệt hoặc từ chối xe",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/Vehicles",
+      "access": "Admin",
+      "view": "Admin/Vehicles",
+      "user_intent": "Quản lý trạng thái xe",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/Users",
+      "access": "Admin",
+      "view": "Admin/Users",
+      "user_intent": "Xác thực, khóa/mở khóa người dùng",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/Payments",
+      "access": "Admin",
+      "view": "Admin/Payments",
+      "user_intent": "Đối soát, hoàn tiền",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/Violations",
+      "access": "Admin",
+      "view": "Admin/Violations",
+      "user_intent": "Xử lý báo cáo vi phạm",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Admin/Policies",
+      "access": "Admin",
+      "view": "Admin/Policies",
+      "user_intent": "Điều chỉnh chính sách",
+      "journey": "Admin",
+      "phase": "4.5",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Violation/Report?orderId=",
+      "access": "Authenticated participant",
+      "view": "Violation/Report",
+      "user_intent": "Báo cáo vi phạm từ đơn thuê",
+      "journey": "Support",
+      "phase": "4.3/4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Violation/MyReports",
+      "access": "Authenticated",
+      "view": "Violation/MyReports",
+      "user_intent": "Theo dõi báo cáo đã gửi",
+      "journey": "Support",
+      "phase": "4.3/4.4",
+      "disposition": "active"
+    },
+    {
+      "method": "GET",
+      "route": "/Booking/Create?vehicleId=",
+      "access": "Customer",
+      "view": "Booking/Create",
+      "user_intent": "Đặt một xe theo luồng Booking cũ",
+      "journey": "Legacy",
+      "phase": "4.6",
+      "disposition": "legacy-preserve"
+    },
+    {
+      "method": "GET",
+      "route": "/Booking/Details/{id}",
+      "access": "Authenticated (booking scope)",
+      "view": "Booking/Details",
+      "user_intent": "Chi tiết Booking cũ",
+      "journey": "Legacy",
+      "phase": "4.6",
+      "disposition": "legacy-preserve"
+    },
+    {
+      "method": "GET",
+      "route": "/Booking/MyBookings",
+      "access": "Authenticated",
+      "view": "Booking/MyBookings",
+      "user_intent": "Danh sách Booking cũ",
+      "journey": "Legacy",
+      "phase": "4.6",
+      "disposition": "legacy-preserve"
+    },
+    {
+      "method": "GET",
+      "route": "/Booking/Requests",
+      "access": "Owner",
+      "view": "Booking/Requests",
+      "user_intent": "Owner xử lý yêu cầu Booking cũ",
+      "journey": "Legacy",
+      "phase": "4.6",
+      "disposition": "legacy-preserve"
+    },
+    {
+      "method": "GET",
+      "route": "/Contract/Details?bookingId=",
+      "access": "Authenticated (booking scope)",
+      "view": "Contract/Details",
+      "user_intent": "Hợp đồng Booking cũ",
+      "journey": "Legacy",
+      "phase": "4.6",
+      "disposition": "legacy-preserve"
+    },
+    {
+      "method": "GET",
+      "route": "/Review/Create?bookingId=",
+      "access": "Customer (own completed Booking)",
+      "view": "Review/Create",
+      "user_intent": "Review Booking cũ",
+      "journey": "Legacy",
+      "phase": "4.6",
+      "disposition": "legacy-preserve"
+    }
+  ],
+  "guarded_actions": [
+    {
+      "role": "Customer",
+      "method": "POST",
+      "route": "/Cart/Add",
+      "description": "Add vehicle",
+      "guard": "Owner-scoped cart; single owner per order",
+      "source": "CartController.Add"
+    },
+    {
+      "role": "Customer",
+      "method": "POST",
+      "route": "/Cart/Remove",
+      "description": "Remove vehicle",
+      "guard": "Do not lose remaining cart",
+      "source": "CartController.Remove"
+    },
+    {
+      "role": "Customer",
+      "method": "POST",
+      "route": "/Cart/Clear",
+      "description": "Clear cart",
+      "guard": "Destructive confirmation and accessibility",
+      "source": "CartController.Clear"
+    },
+    {
+      "role": "Customer",
+      "method": "POST",
+      "route": "/RentalOrder/Checkout",
+      "description": "Create rental order",
+      "guard": "Server price/time/availability checks",
+      "source": "RentalOrderController.Checkout"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/RentalOrder/Confirm",
+      "description": "Approve order",
+      "guard": "Owner scope, duplicate prevention",
+      "source": "RentalOrderController.Confirm"
+    },
+    {
+      "role": "Customer/Owner",
+      "method": "POST",
+      "route": "/RentalOrder/Sign",
+      "description": "Sign contract",
+      "guard": "Distinct per-party signature",
+      "source": "RentalOrderController.Sign"
+    },
+    {
+      "role": "Customer/Owner",
+      "method": "POST",
+      "route": "/RentalOrder/Cancel",
+      "description": "Cancel order",
+      "guard": "Policy, refund, irreversible warning",
+      "source": "RentalOrderController.Cancel"
+    },
+    {
+      "role": "Customer",
+      "method": "POST",
+      "route": "/OrderPayment/Select",
+      "description": "Choose payment method",
+      "guard": "Preserve demo vs real payment distinction",
+      "source": "OrderPaymentController.Select"
+    },
+    {
+      "role": "Customer",
+      "method": "GET",
+      "route": "/OrderPayment/Status",
+      "description": "Poll status",
+      "guard": "Show success, pending, fail, expiry",
+      "source": "OrderPaymentController.Status"
+    },
+    {
+      "role": "Customer",
+      "method": "GET",
+      "route": "/PaymentDemo/Qr",
+      "description": "Get QR image",
+      "guard": "Auth, no cache, no token leakage",
+      "source": "PaymentDemoController.Qr"
+    },
+    {
+      "role": "Signed bearer",
+      "method": "POST",
+      "route": "/api/payments/demo/complete",
+      "description": "Confirm DEMO",
+      "guard": "Token validation and idempotency",
+      "source": "PaymentApiController.CompleteDemo"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/RentalOrder/ConfirmCash",
+      "description": "Confirm cash collected",
+      "guard": "Owner-only, server checks",
+      "source": "RentalOrderController.ConfirmCash"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/RentalOrder/HandOver",
+      "description": "Hand over vehicles",
+      "guard": "Paid first",
+      "source": "RentalOrderController.HandOver"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/RentalOrder/Complete",
+      "description": "Complete order",
+      "guard": "After handover",
+      "source": "RentalOrderController.Complete"
+    },
+    {
+      "role": "Customer",
+      "method": "POST",
+      "route": "/OrderReview/Create",
+      "description": "Submit review per item",
+      "guard": "One review per completed item",
+      "source": "OrderReviewController.Create"
+    },
+    {
+      "role": "Admin",
+      "method": "POST",
+      "route": "/OrderReview/SetVisibility",
+      "description": "Hide/unhide new review",
+      "guard": "No destructive delete",
+      "source": "OrderReviewController.SetVisibility"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/Vehicle/Create",
+      "description": "Create vehicle",
+      "guard": "Verified profile required",
+      "source": "VehicleController.Create"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/Vehicle/Edit",
+      "description": "Update vehicle",
+      "guard": "Object ownership, approval reset",
+      "source": "VehicleController.Edit"
+    },
+    {
+      "role": "Admin",
+      "method": "POST",
+      "route": "/Admin/VerifyUser",
+      "description": "Approve/reject identity",
+      "guard": "Protect document access",
+      "source": "AdminController.VerifyUser"
+    },
+    {
+      "role": "Admin",
+      "method": "POST",
+      "route": "/Admin/ConfirmRefund",
+      "description": "Confirm refund",
+      "guard": "Audit trail",
+      "source": "AdminController.ConfirmRefund"
+    },
+    {
+      "role": "Owner",
+      "method": "POST",
+      "route": "/Booking/Confirm",
+      "description": "Approve legacy booking",
+      "guard": "Legacy preserved",
+      "source": "BookingController.Confirm"
+    }
+  ],
+  "controllers": [
+    "Account",
+    "Admin",
+    "Booking",
+    "Cart",
+    "Contract",
+    "Home",
+    "OrderPayment",
+    "OrderReview",
+    "OwnerPortal",
+    "PaymentApi",
+    "Payment",
+    "PaymentDemo",
+    "RentalOrder",
+    "Review",
+    "Vehicle",
+    "Violation"
+  ],
+  "known_layouts": [
+    "RentalPlatform/Views/Shared/_Layout.cshtml"
+  ],
+  "protected_invariants": [
+    "No domain model/data/migration modifications in GD4.0",
+    "Customer/Owner/Admin authorization must remain server-enforced",
+    "Legacy Booking and Review preserved",
+    "Signed QR demo never represented as real bank payment",
+    "Review of RentalOrderItem unique per item"
+  ],
+  "ci_baseline": {
+    "GD0": "PASS",
+    "GD1": "PASS",
+    "GD2": "PASS",
+    "GD3": "PASS",
+    "commit": "22b7263320de2ec2e56228146042eaec01fffc86"
+  },
+  "status_enums": {
+    "TrangThaiDonThue": [
+      "ChoChuXeXacNhan",
+      "DaXacNhan",
+      "ChoThanhToan",
+      "DaThanhToan",
+      "DangThue",
+      "HoanThanh",
+      "DaHuy"
+    ],
+    "TrangThaiThanhToanDon": [
+      "ChuaChon",
+      "ChoThanhToan",
+      "ChoThuTienKhiNhanXe",
+      "DaThanhToan",
+      "ThatBai",
+      "ChoHoanTien",
+      "DaHoanTien"
+    ]
+  },
+  "verification_limits": "Static source audit. No live browser usability, accessibility, performance or device testing performed."
+}

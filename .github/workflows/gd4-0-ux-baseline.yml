@@ -1,0 +1,14 @@
+name: GD4.0 UI UX baseline
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  static-ui-audit:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source/page inventory and acceptance baseline (read-only)
+        run: python3 scripts/ci/check-gd4-0-baseline.py

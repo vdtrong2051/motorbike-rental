@@ -1,0 +1,22 @@
+﻿Role,Method,RoutePattern,Action,CriticalGuard,Source
+Customer,POST,/Cart/Add,Add vehicle,Owner-scoped cart; single owner per order,CartController.Add
+Customer,POST,/Cart/Remove,Remove vehicle,Do not lose remaining cart,CartController.Remove
+Customer,POST,/Cart/Clear,Clear cart,Destructive confirmation and accessibility,CartController.Clear
+Customer,POST,/RentalOrder/Checkout,Create rental order,Server price/time/availability checks,RentalOrderController.Checkout
+Owner,POST,/RentalOrder/Confirm,Approve order,"Owner scope, duplicate prevention",RentalOrderController.Confirm
+Customer/Owner,POST,/RentalOrder/Sign,Sign contract,Distinct per-party signature,RentalOrderController.Sign
+Customer/Owner,POST,/RentalOrder/Cancel,Cancel order,"Policy, refund, irreversible warning",RentalOrderController.Cancel
+Customer,POST,/OrderPayment/Select,Choose payment method,Preserve demo vs real payment distinction,OrderPaymentController.Select
+Customer,GET,/OrderPayment/Status,Poll status,"Show success, pending, fail, expiry",OrderPaymentController.Status
+Customer,GET,/PaymentDemo/Qr,Get QR image,"Auth, no cache, no token leakage",PaymentDemoController.Qr
+Signed bearer,POST,/api/payments/demo/complete,Confirm DEMO,Token validation and idempotency,PaymentApiController.CompleteDemo
+Owner,POST,/RentalOrder/ConfirmCash,Confirm cash collected,"Owner-only, server checks",RentalOrderController.ConfirmCash
+Owner,POST,/RentalOrder/HandOver,Hand over vehicles,Paid first,RentalOrderController.HandOver
+Owner,POST,/RentalOrder/Complete,Complete order,After handover,RentalOrderController.Complete
+Customer,POST,/OrderReview/Create,Submit review per item,One review per completed item,OrderReviewController.Create
+Admin,POST,/OrderReview/SetVisibility,Hide/unhide new review,No destructive delete,OrderReviewController.SetVisibility
+Owner,POST,/Vehicle/Create,Create vehicle,Verified profile required,VehicleController.Create
+Owner,POST,/Vehicle/Edit,Update vehicle,"Object ownership, approval reset",VehicleController.Edit
+Admin,POST,/Admin/VerifyUser,Approve/reject identity,Protect document access,AdminController.VerifyUser
+Admin,POST,/Admin/ConfirmRefund,Confirm refund,Audit trail,AdminController.ConfirmRefund
+Owner,POST,/Booking/Confirm,Approve legacy booking,Legacy preserved,BookingController.Confirm
