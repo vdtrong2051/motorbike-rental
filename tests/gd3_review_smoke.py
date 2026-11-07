@@ -68,11 +68,16 @@ def main():
     check(data['vehicleId'] and user.send(review_url)[0] == 200,
           'Own completed item review form renders')
     token = user.form_token(review_url)
-    code, _, page = user.send('/OrderReview/Create', {
+    code, invalid_url, page = user.send('/OrderReview/Create', {
         '__RequestVerificationToken': token,
         'RentalOrderItemId': data['itemId'], 'SoSao': '0', 'NhanXet': 'Invalid stars'
     })
-    check(code == 200 and '1 đến 5' in page, 'Invalid rating rejected by MVC')
+    check(
+        code == 200
+        and parse.urlsplit(invalid_url).path == '/OrderReview/Create'
+        and user.send(review_url)[0] == 200,
+        f'Invalid rating rejected without saving (HTTP {code}, URL {invalid_url})'
+    )
     code, url, page = user.send('/OrderReview/Create', {
         '__RequestVerificationToken': token,
         'RentalOrderItemId': data['itemId'], 'SoSao': '5', 'NhanXet': 'GD3 browser submitted review'

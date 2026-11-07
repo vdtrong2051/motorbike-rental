@@ -39,6 +39,10 @@ jobs:
           dotnet build tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj -c Release --no-restore
       - name: Initialize DISPOSABLE MySQL from EXISTING migrations
         run: bash scripts/ci/init-baseline-schema.sh
+      - name: Initialize GD3 table on disposable MySQL
+        env:
+          GD3_TEST_DATABASE: I_UNDERSTAND_DISPOSABLE
+        run: dotnet run --project tests/Gd3.Reviews.Tests/Gd3.Reviews.Tests.csproj -c Release -- init-schema
       - name: Seed disposable payment scenarios
         run: dotnet run --project tests/Gd2.Qr.Tests/Gd2.Qr.Tests.csproj -c Release --no-build
       - name: Run QR / mobile / API end-to-end smoke
