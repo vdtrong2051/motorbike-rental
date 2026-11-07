@@ -36,7 +36,6 @@
             {
                 <option value="@value" selected="@(filter.HopSo == value)">@value.GetDisplayName()</option>
             }
-            <option value="pho-bien" selected="@(filter.SapXep == "pho-bien")">Xe phổ biến nhất</option>
         </select>
     </div>
     <div class="col-md-3">
@@ -65,6 +64,7 @@
         <label class="form-label">Sắp xếp</label>
         <select name="SapXep" class="form-select">
             <option value="moi-nhat" selected="@(filter.SapXep == "moi-nhat")">Mới đăng</option>
+            <option value="pho-bien" selected="@(filter.SapXep == "pho-bien")">Xe phổ biến nhất</option>
             <option value="gia-tang" selected="@(filter.SapXep == "gia-tang")">Giá thấp → cao</option>
             <option value="gia-giam" selected="@(filter.SapXep == "gia-giam")">Giá cao → thấp</option>
             <option value="nam-moi" selected="@(filter.SapXep == "nam-moi")">Năm sản xuất mới</option>

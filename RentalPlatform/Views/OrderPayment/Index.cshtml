@@ -135,8 +135,11 @@
                 const status = await response.json();
                 if (status.paid) {
                     clearInterval(timer);
-                    document.getElementById('paymentPending').className = 'alert alert-success';
-                    document.getElementById('paymentPending').textContent = 'Đã nhận thông báo thanh toán. Đang cập nhật…';
+                    const pending = document.getElementById('paymentPending');
+                    if (pending) {
+                        pending.className = 'alert alert-success';
+                        pending.textContent = 'Đã nhận thông báo thanh toán. Đang cập nhật…';
+                    }
                     setTimeout(() => location.reload(), 900);
                 }
             }, 3000);

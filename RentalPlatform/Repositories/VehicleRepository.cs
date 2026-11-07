@@ -14,11 +14,13 @@ public class VehicleRepository : IVehicleRepository
         _db = db;
     }
 
-    public async Task<Vehicle?> GetByIdAsync(Guid id, bool includeImages = true)
+    public async Task<Vehicle?> GetByIdAsync(Guid id, bool includeImages = true, bool includeReviews = false)
     {
         var query = _db.Vehicles.Include(v => v.Owner).AsQueryable();
         if (includeImages)
             query = query.Include(v => v.HinhAnh);
+        if (includeReviews)
+            query = query.Include(v => v.DanhGia).ThenInclude(r => r.Customer);
 
         return await query.FirstOrDefaultAsync(v => v.Id == id);
     }

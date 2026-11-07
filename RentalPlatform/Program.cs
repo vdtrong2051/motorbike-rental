@@ -48,7 +48,9 @@ builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>(); // TODO: xác nhận đúng tên class
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IRentalOrderService, RentalOrderService>();
 builder.Services.AddSingleton<IRentalContractWordService, RentalContractWordService>();

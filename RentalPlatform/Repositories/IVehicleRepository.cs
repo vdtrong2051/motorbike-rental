@@ -5,7 +5,7 @@ namespace RentalPlatform.Repositories;
 
 public interface IVehicleRepository
 {
-    Task<Vehicle?> GetByIdAsync(Guid id, bool includeImages = true);
+    Task<Vehicle?> GetByIdAsync(Guid id, bool includeImages = true, bool includeReviews = false);
     Task<Vehicle> AddAsync(Vehicle vehicle);
     Task UpdateAsync(Vehicle vehicle, IReadOnlyCollection<VehicleImage>? newImages = null);
     Task DeleteAsync(Vehicle vehicle);

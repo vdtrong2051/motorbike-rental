@@ -180,7 +180,7 @@ public class VehicleService : IVehicleService
         return VehicleOperationResult.Ok(vehicle);
     }
 
-    public Task<Vehicle?> GetDetailAsync(Guid id) => _repository.GetByIdAsync(id);
+    public Task<Vehicle?> GetDetailAsync(Guid id) => _repository.GetByIdAsync(id, includeReviews: true);
 
     public Task<List<Vehicle>> GetMyVehiclesAsync(Guid ownerId) => _repository.GetByOwnerAsync(ownerId);
 

@@ -1,0 +1,57 @@
+name: GD0 baseline
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: gd0_root_password
+          MYSQL_DATABASE: RentalPlatformDb
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pgd0_root_password"
+          --health-interval=10s --health-timeout=5s --health-retries=15
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://127.0.0.1:5117
+      ConnectionStrings__DefaultConnection: 'Server=127.0.0.1;Port=3306;Database=RentalPlatformDb;User=root;Password=gd0_root_password;CharSet=utf8mb4;SslMode=Disabled'
+      SeedAdmin__Email: gd0-admin@example.test
+      SeedAdmin__Password: GD0_Admin_Test_2026!
+      SeedAdmin__Name: GD0 Admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore and build
+        run: |
+          dotnet restore RentalPlatform/RentalPlatform.csproj
+          dotnet build RentalPlatform/RentalPlatform.csproj -c Release --no-restore
+      - name: Apply migrations to fresh MySQL
+        working-directory: RentalPlatform
+        run: |
+          dotnet tool restore
+          dotnet tool run dotnet-ef database update --configuration Release
+      - name: Smoke startup and three roles
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet run --project RentalPlatform/RentalPlatform.csproj -c Release --no-build --no-launch-profile > /tmp/gd0-app.log 2>&1 &
+          echo $! > /tmp/gd0-app.pid
+          trap 'kill "$(cat /tmp/gd0-app.pid)" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 50); do
+            if curl --fail --silent http://127.0.0.1:5117/ > /dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then cat /tmp/gd0-app.log; exit 1; fi
+          python3 tests/gd0_smoke.py
+      - name: Print log on failure
+        if: failure()
+        run: cat /tmp/gd0-app.log || true

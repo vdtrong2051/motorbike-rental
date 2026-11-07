@@ -48,6 +48,10 @@ else
                     </td>
                     <td class="text-end">
                         <a asp-controller="Booking" asp-action="Details" asp-route-id="@dat.Id" class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                        @if (dat.TrangThai == TrangThaiBooking.HoanThanh && dat.Review is null)
+                        {
+                            <a asp-controller="Review" asp-action="Create" asp-route-bookingId="@dat.Id" class="btn btn-sm btn-primary">Đánh giá</a>
+                        }
                         @if (dat.TrangThai is TrangThaiBooking.ChoXacNhan or TrangThaiBooking.DaXacNhan)
                         {
                             <form asp-controller="Booking" asp-action="Cancel" method="post" class="d-inline">
