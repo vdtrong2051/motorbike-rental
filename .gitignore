@@ -1,3 +1,5 @@
 ContractQa/
 .qa/
 artifacts/
+**/bin/
+**/obj/

@@ -86,7 +86,15 @@ def main():
     check(other.req(qrpath)[0] == 404, 'Other customer cannot generate victim QR')
     check(other.req('/api/payments/orders/' + f['paid'] + '/status')[0] == 404,
           'Other customer cannot read victim payment status')
-    check(anon.req(qrpath)[0] != 200, 'Anonymous visitor cannot generate a new QR')
+    anon_status, anon_url, anon_body, _ = anon.req(qrpath)
+    check(
+        anon_status in (401, 403) or (
+            anon_status == 200
+            and parse.urlsplit(anon_url).path == '/Account/Login'
+            and not anon_body.startswith(b'\x89PNG\r\n\x1a\n')
+        ),
+        'Anonymous visitor is challenged instead of receiving QR'
+    )
 
     token = session(customer, f['paid'])
     code, url, body, _ = customer.req('/PaymentDemo/Start?orderId=' + f['paid'])
