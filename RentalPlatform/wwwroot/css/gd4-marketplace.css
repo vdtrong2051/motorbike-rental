@@ -102,3 +102,5 @@
 .gd4-auth-page > [class*="col-"] { background:#fff; padding:clamp(1.2rem,3vw,2.2rem); border:1px solid var(--gd4-line); border-radius:20px; box-shadow:var(--gd4-shadow); }
 .gd4-auth-page h2 { font-family:var(--gd4-font); font-weight:800; letter-spacing:-.055em; }
 .gd4-auth-page button[type="submit"] { width:100%; min-height:46px; }
+/* GD4.6: prevent unbroken user-generated reviews from expanding mobile pages. */
+.gd4-marketplace .gd4-vehicle-review { min-width: 0; overflow-wrap: anywhere; }

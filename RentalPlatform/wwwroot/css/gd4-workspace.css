@@ -36,3 +36,7 @@
 .gd4-workspace .gd4-admin-kpis { margin-bottom:1.2rem; }
 .gd4-workspace .gd4-admin-kpis .card { min-height:102px; }
 .gd4-workspace-footer { color:var(--gd4-muted); text-align:center; padding:1rem; border-top:1px solid var(--gd4-line); font-size:.76rem; }
+/* GD4.6: KPI text must remain visible on the light workspace cards. */
+.gd4-workspace .metric-card { min-width: 0; color: var(--gd4-ink); }
+.gd4-workspace .metric-card span { color: var(--gd4-muted); }
+.gd4-workspace .metric-card strong { color: var(--gd4-ink); font-family: var(--gd4-font); font-size: clamp(.95rem, 2.5vw, 1.35rem); overflow-wrap: anywhere; }
