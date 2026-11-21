@@ -1,0 +1,26 @@
+@model RentalPlatform.Models.Entities.TrangThaiThanhToanDon
+@{
+    var label = Model switch
+    {
+        TrangThaiThanhToanDon.ChuaChon => "Chưa chọn",
+        TrangThaiThanhToanDon.ChoThanhToan => "Chờ thanh toán",
+        TrangThaiThanhToanDon.ChoThuTienKhiNhanXe => "Chờ thu tiền khi nhận xe",
+        TrangThaiThanhToanDon.DaThanhToan => "Đã thanh toán",
+        TrangThaiThanhToanDon.ThatBai => "Thất bại",
+        TrangThaiThanhToanDon.ChoHoanTien => "Chờ hoàn tiền",
+        TrangThaiThanhToanDon.DaHoanTien => "Đã hoàn tiền",
+        _ => "Không xác định"
+    };
+    var tone = Model switch
+    {
+        TrangThaiThanhToanDon.ChuaChon => "unknown",
+        TrangThaiThanhToanDon.ChoThanhToan => "payment-pending",
+        TrangThaiThanhToanDon.ChoThuTienKhiNhanXe => "payment-pending",
+        TrangThaiThanhToanDon.DaThanhToan => "paid",
+        TrangThaiThanhToanDon.ThatBai => "cancelled",
+        TrangThaiThanhToanDon.ChoHoanTien => "pending",
+        TrangThaiThanhToanDon.DaHoanTien => "completed",
+        _ => "unknown"
+    };
+}
+<span class="gd5-status-badge gd5-status-badge--subtle gd5-status--@tone" data-payment-status="@Model" aria-label="Trạng thái thanh toán: @label">@label</span>

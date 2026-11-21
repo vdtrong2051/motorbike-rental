@@ -1,24 +1,83 @@
 @model List<RentalOrder>
 @if (!Model.Any())
 {
-    <div class="gd4-empty-state"><h3>Chưa có đơn thuê nào</h3><p class="gd4-note">Khi có đơn thuê, bạn sẽ theo dõi xác nhận, thanh toán và giao nhận ngay tại đây.</p><a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">Khám phá xe</a></div>
+    <div class="gd4-empty-state">
+        <h3>Chưa có đơn thuê nào</h3>
+        <p class="gd4-note">Khi có đơn thuê, bạn sẽ theo dõi xác nhận, thanh toán và giao nhận ngay tại đây.</p>
+        <a asp-controller="Vehicle" asp-action="Index" class="btn btn-primary">Khám phá xe</a>
+    </div>
 }
 else
 {
-    <div class="table-responsive card"><table class="table align-middle mb-0">
-        <thead><tr><th>Mã đơn</th><th>Khách / Chủ xe</th><th>Xe</th><th>Trạng thái</th><th>Tổng tiền</th><th></th></tr></thead>
-        <tbody>
-        @foreach (var order in Model)
-        {
-            <tr>
-                <td><strong class="text-mono">@order.MaDon</strong><div class="small text-muted">@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div></td>
-                <td>@order.HoTenKhach<div class="small text-muted">Chủ: @order.Owner.HoTen</div></td>
-                <td>@order.Items.Count xe<div class="small text-muted">@string.Join(", ", order.Items.Select(i => i.TenXe))</div></td>
-                <td><span class="badge bg-secondary">@order.TrangThai</span></td>
-                <td class="price-tag">@order.TongTien.ToString("N0") đ</td>
-                <td><a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
-            </tr>
-        }
-        </tbody>
-    </table></div>
+    <div class="table-responsive card gd5-order-list" tabindex="0" aria-label="Danh sách đơn thuê; cuộn ngang để xem các cột">
+        <table class="table align-middle mb-0 gd5-order-table">
+            <thead>
+                <tr>
+                    <th scope="col">Mã đơn</th>
+                    <th scope="col">Khách / Chủ xe</th>
+                    <th scope="col">Xe</th>
+                    <th scope="col">Thời gian thuê</th>
+                    <th scope="col">Trạng thái</th>
+                    <th scope="col">Tổng tiền</th>
+                    <th scope="col"><span class="visually-hidden">Thao tác</span></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var order in Model)
+            {
+                var items = order.Items.OrderBy(i => i.NgayNhanXe).ThenBy(i => i.TenXe).ToList();
+                <tr>
+                    <td class="gd5-order-code-cell">
+                        <strong class="text-mono gd5-order-code">@order.MaDon</strong>
+                        <div class="small text-muted">Tạo lúc @order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                    </td>
+                    <td>
+                        <strong>@order.HoTenKhach</strong>
+                        <div class="small text-muted">Chủ xe: @order.Owner.HoTen</div>
+                    </td>
+                    <td>
+                        <strong>@items.Count xe</strong>
+                        @foreach (var item in items)
+                        {
+                            <div class="gd5-order-vehicle">
+                                <span>@item.TenXe</span>
+                                <span class="small text-muted"> · @item.BienSo</span>
+                            </div>
+                        }
+                    </td>
+                    <td class="gd5-order-date-cell">
+                        @if (items.Count == 0)
+                        {
+                            <span class="text-muted">Chưa có thông tin thuê</span>
+                        }
+                        else
+                        {
+                            @foreach (var item in items)
+                            {
+                                <div class="gd5-date-entry">
+                                    @if (items.Count > 1)
+                                    {
+                                        <div class="gd5-date-vehicle-name">@item.TenXe · @item.BienSo</div>
+                                    }
+                                    <div><span class="gd5-date-caption">Nhận:</span> <time datetime="@item.NgayNhanXe.ToString("yyyy-MM-ddTHH:mm")">@item.NgayNhanXe.ToString("dd/MM/yyyy HH:mm")</time></div>
+                                    <div><span class="gd5-date-caption">Trả:</span> <time datetime="@item.NgayTraXe.ToString("yyyy-MM-ddTHH:mm")">@item.NgayTraXe.ToString("dd/MM/yyyy HH:mm")</time></div>
+                                    <div class="gd5-rental-days">@item.SoNgayThue ngày thuê</div>
+                                </div>
+                            }
+                        }
+                    </td>
+                    <td class="gd5-order-status-cell">
+                        @await Html.PartialAsync("_RentalOrderStatusBadge", order.TrangThai)
+                        <div class="gd5-payment-substatus">
+                            <span class="gd5-label">Thanh toán</span>
+                            @await Html.PartialAsync("_RentalPaymentStatusBadge", order.TrangThaiThanhToan)
+                        </div>
+                    </td>
+                    <td class="price-tag gd5-order-price">@order.TongTien.ToString("N0") đ</td>
+                    <td><a asp-controller="RentalOrder" asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm">Chi tiết</a></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
 }

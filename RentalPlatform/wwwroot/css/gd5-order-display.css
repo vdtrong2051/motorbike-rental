@@ -1,0 +1,54 @@
+/* GD5-A — Order Display Fix. Explicit contrast independent of Bootstrap / Tabler badge tokens. */
+.gd5-status-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: .38rem .65rem;
+  border: 1px solid transparent;
+  border-radius: .55rem;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left;
+  box-shadow: none;
+}
+.gd5-status--pending { background-color: #fff0cc !important; color: #734400 !important; border-color: #e9cd8a !important; }
+.gd5-status--confirmed { background-color: #e4efff !important; color: #174d91 !important; border-color: #a9c7ef !important; }
+.gd5-status--payment-pending { background-color: #fff0db !important; color: #854700 !important; border-color: #efc58d !important; }
+.gd5-status--paid { background-color: #e0f5e7 !important; color: #14613a !important; border-color: #a1d9b8 !important; }
+.gd5-status--renting { background-color: #d9ecf8 !important; color: #174c71 !important; border-color: #99c5e0 !important; }
+.gd5-status--completed { background-color: #dcf4e8 !important; color: #155c3d !important; border-color: #9bd5b8 !important; }
+.gd5-status--cancelled { background-color: #fde4e5 !important; color: #962d36 !important; border-color: #e6aeb5 !important; }
+.gd5-status--unknown { background-color: #eaf0f0 !important; color: #344c52 !important; border-color: #c7d3d6 !important; }
+.gd5-status-badge--subtle { padding: .22rem .45rem; font-size: .70rem; font-weight: 600; }
+.gd5-label { font-size: .73rem; color: #556b68; font-weight: 600; }
+.gd5-order-list { overflow-x: auto; }
+.gd5-order-table { min-width: 1120px !important; }
+.gd5-order-table th, .gd5-order-table td { vertical-align: top !important; }
+.gd5-order-code { font-size: .85rem; overflow-wrap: anywhere; }
+.gd5-order-code-cell { min-width: 160px; }
+.gd5-order-vehicle { margin-top: .22rem; font-size: .85rem; line-height: 1.45; }
+.gd5-order-date-cell { min-width: 240px; }
+.gd5-date-entry + .gd5-date-entry { border-top: 1px dashed #d2e0db; margin-top: .65rem; padding-top: .65rem; }
+.gd5-date-entry { font-size: .82rem; line-height: 1.65; color: #243b36; }
+.gd5-date-caption { display: inline-block; min-width: 40px; color: #546b65; font-weight: 600; }
+.gd5-date-vehicle-name { font-weight: 700; font-size: .8rem; }
+.gd5-rental-days { color: #5a6f68; font-size: .75rem; }
+.gd5-order-status-cell { min-width: 160px; }
+.gd5-payment-substatus { display: flex; flex-direction: column; align-items: flex-start; gap: .2rem; margin-top: .7rem; }
+.gd5-order-price { min-width: 110px; font-weight: 700; white-space: nowrap; }
+.gd5-detail-statuses { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: .55rem; }
+.gd5-detail-status-field { display: flex; flex-direction: column; align-items: flex-start; gap: .27rem; }
+.gd5-dashboard-order-meta { display: flex; flex-direction: column; align-items: flex-end; gap: .35rem; text-align: right; }
+.gd5-dashboard-date { color: #526960; }
+.gd4-journey-top .gd5-status-badge { flex: 0 1 auto; }
+@media(max-width: 575.98px) {
+  .gd5-order-table { min-width: 1060px !important; }
+  .gd5-dashboard-order-meta { max-width: 45%; }
+  .gd5-dashboard-order-meta .price-tag { overflow-wrap: anywhere; }
+}
