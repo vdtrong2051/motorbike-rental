@@ -15,8 +15,8 @@ public class BookingOperationResult
 
 public interface IBookingService
 {
-    // Trả về true nếu xe còn trống trong khoảng [tuNgay, denNgay] — chỉ tính các booking
-    // đang ở trạng thái DaXacNhan hoặc DangThue là chiếm lịch.
+    // Legacy DateOnly interval reserves the end date inclusively.
+    // All non-cancelled Booking and RentalOrder intervals occupy the vehicle slot.
     Task<bool> KiemTraConTrongAsync(Guid vehicleId, DateOnly tuNgay, DateOnly denNgay, Guid? loaiTruBookingId = null);
 
     decimal TinhTongTien(decimal giaMotNgay, DateOnly ngayBatDau, DateOnly ngayKetThuc);

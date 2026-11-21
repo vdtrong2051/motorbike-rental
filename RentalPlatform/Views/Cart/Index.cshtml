@@ -37,6 +37,14 @@ else
                             <h5 class="mb-1 mt-2">@item.TenXe</h5>
                             <div class="small text-muted">@item.BienSo · @item.KhuVuc</div>
                             <div class="price-tag mt-1">@item.GiaThueMotNgay.ToString("N0") đ / ngày</div>
+                            <form asp-action="UpdateDates" method="post" class="gd5b-cart-dates">
+                                <input type="hidden" name="vehicleId" value="@item.VehicleId" />
+                                <div class="row g-2">
+                                    <div class="col-md-5"><label class="form-label">Nhận xe</label><input type="datetime-local" name="ngayNhanXe" value="@item.NgayNhanXe.ToString("yyyy-MM-ddTHH:mm")" class="form-control form-control-sm" required /></div>
+                                    <div class="col-md-5"><label class="form-label">Trả xe</label><input type="datetime-local" name="ngayTraXe" value="@item.NgayTraXe.ToString("yyyy-MM-ddTHH:mm")" class="form-control form-control-sm" required /></div>
+                                    <div class="col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-sm btn-outline-primary w-100">Lưu lịch</button></div>
+                                </div>
+                            </form>
                         </div>
                         <form asp-action="Remove" method="post">
                             <input type="hidden" name="vehicleId" value="@item.VehicleId" />

@@ -41,7 +41,13 @@ public class RentalOrderController : Controller
     public async Task<IActionResult> Checkout(CheckoutViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
-        var result = await _orders.CreateAsync(model, CurrentUserId);
+        RentalOrderOperationResult result;
+        try { result = await _orders.CreateAsync(model, CurrentUserId); }
+        catch (MySql.Data.MySqlClient.MySqlException ex) when (ex.Number is 1205 or 1213)
+        {
+            ModelState.AddModelError(string.Empty, "Lịch xe vừa được người khác cập nhật. Vui lòng thử lại.");
+            return View(model);
+        }
         if (!result.Success)
         {
             ModelState.AddModelError(string.Empty, result.Error!);

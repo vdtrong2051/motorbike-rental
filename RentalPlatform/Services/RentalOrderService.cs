@@ -5,6 +5,7 @@ using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.RentalOrder;
 using RentalPlatform.Services.Payments;
+using RentalPlatform.Services.Availability;
 
 namespace RentalPlatform.Services;
 
@@ -34,12 +35,15 @@ public class RentalOrderService : IRentalOrderService
     private readonly AppDbContext _db;
     private readonly ICartService _cart;
     private readonly IPaymentCore _paymentCore;
+    private readonly IVehicleAvailabilityService _availability;
 
-    public RentalOrderService(AppDbContext db, ICartService cart, IPaymentCore paymentCore)
+    public RentalOrderService(AppDbContext db, ICartService cart, IPaymentCore paymentCore,
+        IVehicleAvailabilityService availability)
     {
         _db = db;
         _cart = cart;
         _paymentCore = paymentCore;
+        _availability = availability;
     }
 
     public async Task<CheckoutViewModel> BuildCheckoutAsync(Guid customerId)
@@ -61,7 +65,9 @@ public class RentalOrderService : IRentalOrderService
                 BienSo = i.BienSo,
                 LoaiXe = i.LoaiXe,
                 GiaThueMotNgay = i.GiaThueMotNgay,
-                TinhTrang = "Sẵn sàng cho thuê"
+                NgayNhanXe = i.NgayNhanXe,
+                NgayTraXe = i.NgayTraXe,
+                TinhTrang = "Theo lịch đã chọn"
             }).ToList()
         };
     }
@@ -74,16 +80,16 @@ public class RentalOrderService : IRentalOrderService
         var cart = await _cart.GetAsync();
         var cartIds = cart.Items.Select(i => i.VehicleId).OrderBy(id => id).ToList();
         var inputIds = model.Items.Select(i => i.VehicleId).Distinct().OrderBy(id => id).ToList();
-        if (cartIds.Count == 0 || !cartIds.SequenceEqual(inputIds))
-            return new(false, "Giỏ hàng đã thay đổi. Vui lòng tải lại trang checkout.");
+        if (cartIds.Count == 0 || model.Items.Count != cartIds.Count || !cartIds.SequenceEqual(inputIds))
+            return new(false, "Giỏ hàng đã thay đổi hoặc chứa xe trùng. Vui lòng tải lại checkout.");
 
         var vehicles = await _db.Vehicles
             .Include(v => v.Owner)
             .Where(v => inputIds.Contains(v.Id))
             .ToListAsync();
         if (vehicles.Count != inputIds.Count) return new(false, "Có xe không còn tồn tại.");
-        if (vehicles.Any(v => v.TrangThai != TrangThaiXe.SanSang))
-            return new(false, "Có xe không còn sẵn sàng cho thuê.");
+        if (vehicles.Any(v => !VehicleAvailabilityService.IsOperatingState(v.TrangThai)))
+            return new(false, "Có xe hiện không được phép cho thuê.");
         if (vehicles.Select(v => v.OwnerId).Distinct().Count() != 1)
             return new(false, "Các xe trong một đơn phải thuộc cùng một chủ.");
 
@@ -97,10 +103,17 @@ public class RentalOrderService : IRentalOrderService
                 return new(false, "Mỗi lượt thuê không được vượt quá 365 ngày.");
         }
 
-        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _availability.LockVehiclesAsync(inputIds);
+        foreach (var vehicle in vehicles)
+        {
+            await _db.Entry(vehicle).ReloadAsync();
+            if (!VehicleAvailabilityService.IsOperatingState(vehicle.TrangThai))
+                return new(false, $"{vehicle.TenXe} hiện không được phép cho thuê.");
+        }
         foreach (var item in model.Items)
         {
-            if (await IsVehicleBusyAsync(item.VehicleId, item.NgayNhanXe, item.NgayTraXe))
+            if (await _availability.IsBusyAsync(item.VehicleId, item.NgayNhanXe, item.NgayTraXe))
             {
                 var vehicle = vehicles.First(v => v.Id == item.VehicleId);
                 return new(false, $"{vehicle.TenXe} đã có lịch trùng trong khoảng thời gian bạn chọn.");
@@ -185,14 +198,21 @@ public class RentalOrderService : IRentalOrderService
         var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
         if (order is null || order.OwnerId != ownerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
         if (order.TrangThai != TrangThaiDonThue.ChoChuXeXacNhan) return new(false, "Đơn không ở trạng thái chờ xác nhận.");
+        await using var confirmTx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _availability.LockVehiclesAsync(order.Items.Select(i => i.VehicleId));
+        await _db.Entry(order).ReloadAsync();
+        if (order.TrangThai != TrangThaiDonThue.ChoChuXeXacNhan)
+            return new(false, "Đơn vừa thay đổi trạng thái. Vui lòng tải lại.");
         foreach (var item in order.Items)
-            if (await IsVehicleBusyAsync(item.VehicleId, item.NgayNhanXe, item.NgayTraXe, order.Id))
+            if (await _availability.IsBusyAsync(item.VehicleId, item.NgayNhanXe, item.NgayTraXe,
+                excludedRentalOrderId: order.Id))
                 return new(false, $"{item.TenXe} vừa phát sinh lịch trùng. Vui lòng huỷ đơn và liên hệ khách.");
 
         order.TrangThai = TrangThaiDonThue.DaXacNhan;
         order.ConfirmedAt = DateTime.UtcNow;
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await confirmTx.CommitAsync();
         return new(true, Order: order);
     }
 
@@ -276,8 +296,9 @@ public class RentalOrderService : IRentalOrderService
     {
         var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
         if (order is null || order.OwnerId != ownerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
-        if (order.TrangThaiThanhToan != TrangThaiThanhToanDon.DaThanhToan)
-            return new(false, "Cần hoàn tất thanh toán trước khi giao xe.");
+        if (order.TrangThai != TrangThaiDonThue.DaThanhToan
+            || order.TrangThaiThanhToan != TrangThaiThanhToanDon.DaThanhToan)
+            return new(false, "Đơn phải ở trạng thái đã thanh toán trước khi giao xe.");
         order.TrangThai = TrangThaiDonThue.DangThue;
         foreach (var item in order.Items) item.Vehicle.TrangThai = TrangThaiXe.DangThue;
         order.UpdatedAt = DateTime.UtcNow;
@@ -350,21 +371,6 @@ public class RentalOrderService : IRentalOrderService
         .Include(o => o.Items).ThenInclude(i => i.Vehicle).ThenInclude(v => v.HinhAnh)
         .Include(o => o.Contract)
         .Include(o => o.Payments);
-
-    private async Task<bool> IsVehicleBusyAsync(Guid vehicleId, DateTime start, DateTime end, Guid? excludedOrderId = null)
-    {
-        var startDate = DateOnly.FromDateTime(start);
-        var endDate = DateOnly.FromDateTime(end);
-        var legacyBusy = await _db.Bookings.AnyAsync(b => b.VehicleId == vehicleId
-            && b.TrangThai != TrangThaiBooking.DaHuy
-            && b.NgayBatDau <= endDate && b.NgayKetThuc >= startDate);
-        if (legacyBusy) return true;
-
-        return await _db.RentalOrderItems.AnyAsync(i => i.VehicleId == vehicleId
-            && (excludedOrderId == null || i.RentalOrderId != excludedOrderId)
-            && i.RentalOrder.TrangThai != TrangThaiDonThue.DaHuy
-            && i.NgayNhanXe < end && i.NgayTraXe > start);
-    }
 
     private static string BuildContract(RentalOrder order, User owner, string contractNumber)
     {

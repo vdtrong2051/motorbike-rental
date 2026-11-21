@@ -12,6 +12,7 @@ using RentalPlatform.Models.Entities;
 using RentalPlatform.Repositories;
 using RentalPlatform.Services;
 using RentalPlatform.Services.Payments;
+using RentalPlatform.Services.Availability;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +56,7 @@ builder.Services.AddScoped<IOrderReviewService, OrderReviewService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IRentalOrderService, RentalOrderService>();
+builder.Services.AddScoped<IVehicleAvailabilityService, VehicleAvailabilityService>();
 builder.Services.AddScoped<IPaymentCore, PaymentCore>();
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<IDemoPaymentTokenService, DemoPaymentTokenService>();

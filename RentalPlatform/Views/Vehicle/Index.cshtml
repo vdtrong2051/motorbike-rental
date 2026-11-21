@@ -2,6 +2,8 @@
 @{
     ViewData["Title"] = "Tìm xe cho thuê";
     var filter = Model.Filter;
+    var selectedStart = filter.NgayNhanXe?.ToString("yyyy-MM-ddTHH:mm");
+    var selectedEnd = filter.NgayTraXe?.ToString("yyyy-MM-ddTHH:mm");
 }
 
 <header class="gd4-page-title"><span class="gd4-eyebrow">KHÁM PHÁ MOTORBIKE RENTAL</span>
@@ -105,11 +107,16 @@ else
                         <p class="card-text text-muted mb-1">📍 @xe.KhuVuc</p>
                         <p class="card-text text-muted small">@xe.SoChoNgoi chỗ · @xe.HopSo</p>
                         <div class="gd4-card-foot">
-                            <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@xe.Id" class="btn btn-outline-primary btn-sm">Chi tiết</a>
+                            <a asp-controller="Vehicle" asp-action="Details" asp-route-id="@xe.Id" asp-route-NgayNhanXe="@selectedStart" asp-route-NgayTraXe="@selectedEnd" class="btn btn-outline-primary btn-sm">Chi tiết</a>
                             @if (User.IsInRole("Customer"))
                             {
                                 <form asp-controller="Cart" asp-action="Add" method="post">
                                     <input type="hidden" name="vehicleId" value="@xe.Id" />
+                                    @if (filter.NgayNhanXe.HasValue && filter.NgayTraXe.HasValue)
+                                    {
+                                        <input type="hidden" name="ngayNhanXe" value="@selectedStart" />
+                                        <input type="hidden" name="ngayTraXe" value="@selectedEnd" />
+                                    }
                                     <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
                                     <button class="btn btn-primary btn-sm">+ Giỏ xe</button>
                                 </form>

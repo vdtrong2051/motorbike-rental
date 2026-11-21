@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.Vehicle;
+using RentalPlatform.Services.Availability;
 
 namespace RentalPlatform.Repositories;
 
@@ -85,7 +86,7 @@ public class VehicleRepository : IVehicleRepository
         var query = _db.Vehicles.Include(v => v.HinhAnh).AsQueryable();
 
         if (filter.ChiXeSanSang)
-            query = query.Where(v => v.TrangThai == TrangThaiXe.SanSang);
+            query = query.Where(v => v.TrangThai == TrangThaiXe.SanSang || v.TrangThai == TrangThaiXe.DangThue);
 
         if (!string.IsNullOrWhiteSpace(filter.TuKhoa))
         {
@@ -119,21 +120,11 @@ public class VehicleRepository : IVehicleRepository
         if (filter.SoChoNgoiToiThieu.HasValue)
             query = query.Where(v => v.SoChoNgoi >= filter.SoChoNgoiToiThieu.Value);
 
-        if (filter.NgayNhanXe.HasValue && filter.NgayTraXe.HasValue && filter.NgayTraXe > filter.NgayNhanXe)
-        {
-            var start = filter.NgayNhanXe.Value;
-            var end = filter.NgayTraXe.Value;
-            var startDate = DateOnly.FromDateTime(start);
-            var endDate = DateOnly.FromDateTime(end);
-
-            query = query.Where(v =>
-                !_db.Bookings.Any(b => b.VehicleId == v.Id
-                    && b.TrangThai != TrangThaiBooking.DaHuy
-                    && b.NgayBatDau <= endDate && b.NgayKetThuc >= startDate)
-                && !_db.RentalOrderItems.Any(i => i.VehicleId == v.Id
-                    && i.RentalOrder.TrangThai != TrangThaiDonThue.DaHuy
-                    && i.NgayNhanXe < end && i.NgayTraXe > start));
-        }
+        if (filter.NgayNhanXe.HasValue && filter.NgayTraXe.HasValue
+            && filter.NgayTraXe > filter.NgayNhanXe
+            && (filter.NgayTraXe.Value - filter.NgayNhanXe.Value).TotalDays <= 365)
+            query = VehicleAvailabilityService.FilterAvailable(query, _db,
+                filter.NgayNhanXe.Value, filter.NgayTraXe.Value);
 
         var totalCount = await query.CountAsync();
 

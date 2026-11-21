@@ -26,7 +26,7 @@ public class VehicleSearchViewModel
 
     public string SapXep { get; set; } = "moi-nhat";
 
-    // Chỉ hiển thị xe TrangThai = SanSang cho khách tìm kiếm công khai.
+    // Cho phép xe đang thuê xuất hiện để nhận đơn đặt trước vào khoảng thời gian còn trống.
     // Owner/Admin xem danh sách riêng (MyVehicles / PendingVehicles) nên không dùng field này.
     public bool ChiXeSanSang { get; set; } = true;
 

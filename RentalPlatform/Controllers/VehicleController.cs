@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.Vehicle;
 using RentalPlatform.Services;
+using RentalPlatform.Services.Availability;
 
 namespace RentalPlatform.Controllers;
 
@@ -11,11 +12,14 @@ public class VehicleController : Controller
 {
     private readonly IVehicleService _vehicleService;
     private readonly IOrderReviewService _orderReviews;
+    private readonly IVehicleAvailabilityService _availability;
 
-    public VehicleController(IVehicleService vehicleService, IOrderReviewService orderReviews)
+    public VehicleController(IVehicleService vehicleService, IOrderReviewService orderReviews,
+        IVehicleAvailabilityService availability)
     {
         _vehicleService = vehicleService;
         _orderReviews = orderReviews;
+        _availability = availability;
     }
 
     // GET /Vehicle/Index — tìm kiếm & lọc xe công khai (khu vực / loại xe / khoảng giá), có phân trang
@@ -35,6 +39,43 @@ public class VehicleController : Controller
         if (vehicle is null) return NotFound();
         ViewBag.NewReviews = await _orderReviews.GetPublicByVehicleAsync(id);
         return View(vehicle);
+    }
+
+    // Public availability only. Never return customer identities or contract details.
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> Availability(Guid vehicleId, DateTime? start, DateTime? end)
+    {
+        var from = start ?? DateTime.Today;
+        var to = end ?? from.AddDays(42);
+        if (vehicleId == Guid.Empty || to <= from || (to - from).TotalDays > 370)
+            return BadRequest(new { error = "Khoảng xem lịch không hợp lệ." });
+        var vehicle = await _vehicleService.GetDetailAsync(vehicleId);
+        if (vehicle is null) return NotFound();
+        var windows = await _availability.GetBusyWindowsAsync(vehicleId, from, to);
+        return Json(windows.Select(w => new
+        {
+            title = "Đã có lịch thuê",
+            start = w.Start.ToString("yyyy-MM-ddTHH:mm:ss"),
+            end = w.End.ToString("yyyy-MM-ddTHH:mm:ss"),
+            color = "#b54343"
+        }));
+    }
+
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> CheckAvailability(Guid vehicleId, DateTime start, DateTime end)
+    {
+        if (vehicleId == Guid.Empty || start < DateTime.Now.AddMinutes(-5)
+            || end <= start || (end - start).TotalDays > 365)
+            return BadRequest(new { available = false, message = "Khoảng thời gian nhận/trả không hợp lệ." });
+        var available = await _availability.IsBookableAsync(vehicleId, start, end);
+        return Json(new
+        {
+            available,
+            message = available ? "Xe còn trống trong khoảng thời gian đã chọn."
+                : "Xe không khả dụng hoặc đã có lịch thuê trùng khoảng này."
+        });
     }
 
     [Authorize(Roles = "Owner")]

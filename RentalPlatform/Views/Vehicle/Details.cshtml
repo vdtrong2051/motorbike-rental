@@ -80,7 +80,29 @@
             <p>@Model.MoTa</p>
         }
 
-        @if (Model.TrangThai == TrangThaiXe.SanSang)
+        @{
+            var initialStartText = Context.Request.Query["NgayNhanXe"].ToString();
+            var initialEndText = Context.Request.Query["NgayTraXe"].ToString();
+            var defaultPickup = DateTime.Today.AddDays(1).AddHours(8);
+            var pickup = DateTime.TryParse(initialStartText, out var parsedStart) ? parsedStart : defaultPickup;
+            var dropoff = DateTime.TryParse(initialEndText, out var parsedEnd) ? parsedEnd : pickup.AddDays(1);
+        }
+        <section id="gd5b-availability" class="gd5b-availability"
+                 data-vehicle-id="@Model.Id" data-events-url="@Url.Action("Availability", "Vehicle")"
+                 data-check-url="@Url.Action("CheckAvailability", "Vehicle")">
+            <h3>Lịch thuê và thời gian còn trống</h3>
+            <p class="gd5b-event-help">Các khung màu đỏ đã được giữ lịch. Lịch không công khai thông tin người thuê.</p>
+            <div class="row g-2">
+                <div class="col-md-6"><label for="gd5b-start" class="form-label">Nhận xe</label>
+                    <input id="gd5b-start" type="datetime-local" class="form-control" value="@pickup.ToString("yyyy-MM-ddTHH:mm")" /></div>
+                <div class="col-md-6"><label for="gd5b-end" class="form-label">Trả xe</label>
+                    <input id="gd5b-end" type="datetime-local" class="form-control" value="@dropoff.ToString("yyyy-MM-ddTHH:mm")" /></div>
+            </div>
+            <p id="gd5b-message" role="status" aria-live="polite" class="small mt-2"></p>
+            <div id="gd5b-calendar" class="gd5b-calendar" aria-label="Lịch bận của xe"></div>
+        </section>
+
+        @if (Model.TrangThai is TrangThaiXe.SanSang or TrangThaiXe.DangThue)
         {
             @if (User.Identity is { IsAuthenticated: true })
             {
@@ -120,6 +142,8 @@
         TenKhach = r.Customer.HoTen, r.SoSao, r.NhanXet, r.CreatedAt
     })).OrderByDescending(r => r.CreatedAt).ToList();
 }
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="~/js/gd5b-availability.js" asp-append-version="true" defer></script>
 @if (danhSachDanhGia.Any())
 {
     <hr class="my-4" />
