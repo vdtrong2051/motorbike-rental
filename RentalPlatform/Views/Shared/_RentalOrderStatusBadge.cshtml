@@ -1,0 +1,26 @@
+@model RentalPlatform.Models.Entities.TrangThaiDonThue
+@{
+    var label = Model switch
+    {
+        TrangThaiDonThue.ChoChuXeXacNhan => "Chờ chủ xe xác nhận",
+        TrangThaiDonThue.DaXacNhan => "Đã xác nhận",
+        TrangThaiDonThue.ChoThanhToan => "Chờ thanh toán",
+        TrangThaiDonThue.DaThanhToan => "Đã thanh toán",
+        TrangThaiDonThue.DangThue => "Đang thuê",
+        TrangThaiDonThue.HoanThanh => "Hoàn thành",
+        TrangThaiDonThue.DaHuy => "Đã hủy",
+        _ => "Không xác định"
+    };
+    var tone = Model switch
+    {
+        TrangThaiDonThue.ChoChuXeXacNhan => "pending",
+        TrangThaiDonThue.DaXacNhan => "confirmed",
+        TrangThaiDonThue.ChoThanhToan => "payment-pending",
+        TrangThaiDonThue.DaThanhToan => "paid",
+        TrangThaiDonThue.DangThue => "renting",
+        TrangThaiDonThue.HoanThanh => "completed",
+        TrangThaiDonThue.DaHuy => "cancelled",
+        _ => "unknown"
+    };
+}
+<span class="gd5-status-badge gd5-status--@tone" data-order-status="@Model" aria-label="Trạng thái đơn thuê: @label">@label</span>

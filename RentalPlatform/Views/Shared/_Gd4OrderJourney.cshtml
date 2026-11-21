@@ -15,7 +15,7 @@
         : "Thanh toán đã được ghi nhận. Chờ chủ xe bàn giao xe.";
 }
 <section class="gd4-journey" aria-label="Tiến trình đơn thuê">
-    <div class="gd4-journey-top"><span class="gd4-eyebrow">TIẾN ĐỘ ĐƠN THUÊ</span><strong>@(cancelled ? "Đã hủy" : completed ? "Hoàn thành" : renting ? "Đang thuê" : "Đang xử lý")</strong></div>
+    <div class="gd4-journey-top"><span class="gd4-eyebrow">TIẾN ĐỘ ĐƠN THUÊ</span>@await Html.PartialAsync("_RentalOrderStatusBadge", Model.TrangThai)</div>
     <ol class="gd4-journey-steps">
         <li class="done">Tạo đơn</li>
         <li class="@(confirmed ? "done" : "current")">Chủ xe xác nhận</li>

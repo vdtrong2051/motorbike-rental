@@ -14,8 +14,8 @@
     <div>
         <div class="hero-eyebrow">Đơn thuê nhiều xe</div>
         <h2 class="mb-1">@Model.MaDon</h2>
-        <span class="badge bg-secondary">@Model.TrangThai</span>
-        <span class="badge @(Model.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan ? "bg-success" : "bg-warning text-dark")">@Model.TrangThaiThanhToan</span>
+        <div class="gd5-detail-statuses"><div class="gd5-detail-status-field"><span class="gd5-label">Đơn thuê</span>@await Html.PartialAsync("_RentalOrderStatusBadge", Model.TrangThai)</div>
+        <div class="gd5-detail-status-field"><span class="gd5-label">Thanh toán</span>@await Html.PartialAsync("_RentalPaymentStatusBadge", Model.TrangThaiThanhToan)</div></div>
     </div>
     <div class="text-end"><div class="small text-muted">Tổng giá trị</div><div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div></div>
 </div>
