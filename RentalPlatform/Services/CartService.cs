@@ -4,6 +4,7 @@ using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.RentalOrder;
 using RentalPlatform.Services.Availability;
+using RentalPlatform.Services.Lifecycle;
 
 namespace RentalPlatform.Services;
 
@@ -61,7 +62,7 @@ public class CartService : ICartService
         Session.SetString(SessionDatesKey, JsonSerializer.Serialize(dates));
 
     private static bool ValidPeriod(DateTime start, DateTime end) =>
-        start >= DateTime.Now.AddMinutes(-5) && end > start && (end - start).TotalDays <= 365;
+        start >= RentalLifecyclePolicy.VietnamNow().AddMinutes(-5) && end > start && (end - start).TotalDays <= 365;
 
     public async Task<CartViewModel> GetAsync()
     {
@@ -69,7 +70,7 @@ public class CartService : ICartService
         if (ids.Count == 0) return new CartViewModel();
 
         var selectedDates = GetDates();
-        var defaultStart = DateTime.Today.AddDays(1).AddHours(8);
+        var defaultStart = RentalLifecyclePolicy.VietnamNow().Date.AddDays(1).AddHours(8);
         var vehicles = await _db.Vehicles
             .AsNoTracking()
             .Include(v => v.HinhAnh)

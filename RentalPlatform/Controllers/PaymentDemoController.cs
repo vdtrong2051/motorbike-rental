@@ -114,6 +114,10 @@ public sealed class PaymentDemoController : Controller
         {
             IsValid = true,
             Token = token,
+            ReturnUrl = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var activeCustomerId)
+                && User.IsInRole("Customer") && activeCustomerId == payment.RentalOrder.CustomerId
+                ? (Url.Action("Index", "OrderPayment", new { orderId = payment.RentalOrderId }) ?? string.Empty)
+                : string.Empty,
             OrderCode = payment.RentalOrder.MaDon,
             Reference = payment.MaGiaoDich,
             Amount = payment.SoTien,
@@ -127,6 +131,18 @@ public sealed class PaymentDemoController : Controller
             ExpiresAtUtc = DateTime.SpecifyKind(payment.CreatedAt, DateTimeKind.Utc).AddMinutes(pendingMinutes)
         };
         return View(model);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult Completed()
+    {
+        SetPrivateHeaders();
+        Response.Headers["Content-Security-Policy"] =
+            "default-src 'none'; style-src 'self'; base-uri 'none'; " +
+            "form-action 'none'; frame-ancestors 'none'";
+        // Informational only: the customer must verify payment in their authenticated order.
+        return View();
     }
 
     private Guid CurrentUserId => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

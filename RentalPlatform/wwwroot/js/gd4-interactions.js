@@ -45,7 +45,7 @@
           return;
         }
         // Defers disabling until after ASP.NET/Bootstrap submit listeners.
-        setTimeout(() => { submitter.dataset.gd4Busy = '1'; submitter.setAttribute('aria-busy','true'); }, 0);
+        setTimeout(() => { if (evt.defaultPrevented || !form.checkValidity()) return; submitter.dataset.gd4Busy = '1'; submitter.setAttribute('aria-busy','true'); }, 0);
       });
     });
 

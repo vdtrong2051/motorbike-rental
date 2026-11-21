@@ -7,6 +7,7 @@ using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Services;
 using RentalPlatform.Services.Payments;
+using RentalPlatform.Services.Availability;
 
 var connection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? throw new Exception("Set ConnectionStrings__DefaultConnection for disposable MySQL tests.");
@@ -123,7 +124,7 @@ var (cancelRef, _) = await Select(cancelled, PhuongThucThanhToanDon.ChuyenKhoan)
 await using (var db = Open())
 {
     // Constructor's cart is not accessed by CancelAsync. Exercise the real order cancellation path.
-    var service = new RentalOrderService(db, null!, Core(db));
+    var service = new RentalOrderService(db, null!, Core(db), new VehicleAvailabilityService(db));
     Check((await service.CancelAsync(cancelled, customerId, "customer changed mind")).Success, "Cancel pending order");
 }
 await using (var db = Open())

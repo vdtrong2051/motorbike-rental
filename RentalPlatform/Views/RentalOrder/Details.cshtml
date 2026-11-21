@@ -17,7 +17,9 @@
         <div class="gd5-detail-statuses"><div class="gd5-detail-status-field"><span class="gd5-label">Đơn thuê</span>@await Html.PartialAsync("_RentalOrderStatusBadge", Model.TrangThai)</div>
         <div class="gd5-detail-status-field"><span class="gd5-label">Thanh toán</span>@await Html.PartialAsync("_RentalPaymentStatusBadge", Model.TrangThaiThanhToan)</div></div>
     </div>
-    <div class="text-end"><div class="small text-muted">Tổng giá trị</div><div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div></div>
+    <div class="text-end"><div class="small text-muted">Tổng giá trị</div><div class="price-tag fs-3">@Model.TongTien.ToString("N0") đ</div>
+        <div class="small text-muted">Thuê: @Model.TienThue.ToString("N0") đ · Cọc: @Model.TienDatCoc.ToString("N0") đ · Phí: @Model.PhiDichVu.ToString("N0") đ</div>
+    </div>
 </div>
 
 <partial name="_Gd4OrderJourney" model="Model" />
@@ -89,7 +91,7 @@
                             </span>
                         }
                     </div>
-                    @if (!mySigned && Model.TrangThai != TrangThaiDonThue.DaHuy)
+                    @if (!mySigned && RentalPlatform.Services.Lifecycle.RentalLifecyclePolicy.CanSignContract(Model.TrangThai))
                     {
                         <form asp-action="Sign" method="post" class="mt-3">
                             <input type="hidden" name="id" value="@Model.Id" />
@@ -137,16 +139,17 @@
                 }
                 @if (isOwner && Model.TrangThai == TrangThaiDonThue.DaThanhToan)
                 {
+                    <p class="small text-muted mb-2">Chỉ bàn giao khi đã ký đủ hợp đồng, nhận đủ tiền, xe sẵn sàng và thời gian nhận xe không sớm quá 2 giờ.</p>
                     <form asp-action="HandOver" method="post">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button class="btn btn-success w-100">Xác nhận giao xe</button>
+                        <button class="btn btn-success w-100" onclick="return confirm('Xác nhận đã bàn giao toàn bộ xe theo lịch thuê?')">Xác nhận giao xe</button>
                     </form>
                 }
                 @if (isOwner && Model.TrangThai == TrangThaiDonThue.DangThue)
                 {
                     <form asp-action="Complete" method="post">
                         <input type="hidden" name="id" value="@Model.Id" />
-                        <button class="btn btn-success w-100">Xác nhận nhận lại xe</button>
+                        <button class="btn btn-success w-100" onclick="return confirm('Xác nhận đã nhận lại toàn bộ xe và hoàn tất đơn thuê?')">Xác nhận nhận lại xe</button>
                     </form>
                 }
                 @if (Model.TrangThai is not (TrangThaiDonThue.DangThue or TrangThaiDonThue.HoanThanh or TrangThaiDonThue.DaHuy)

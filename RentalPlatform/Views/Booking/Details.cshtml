@@ -175,7 +175,7 @@
             {
                 <form asp-controller="Booking" asp-action="GiaoXe" method="post" class="d-inline">
                     <input type="hidden" name="id" value="@Model.Id" />
-                    <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận đã giao xe cho khách?');">Xác nhận giao xe</button>
+                    <button type="submit" class="btn btn-success" onclick="return confirm('Xác nhận đã giao xe đúng ngày nhận, đủ hợp đồng và thanh toán?');">Xác nhận giao xe</button>
                 </form>
                 @if (Model.Contract is null || !Model.Contract.DaKyKhach || !Model.Contract.DaKyChuXe || !daThanhToanDu)
                 {

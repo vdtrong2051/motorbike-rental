@@ -1,0 +1,42 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Hoàn tất thanh toán DEMO";
+}
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Hoàn tất thanh toán DEMO — Motorbike Rental</title>
+    <link rel="stylesheet" href="~/css/payment-demo.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="demo-shell">
+        <div class="demo-brand">MOTORBIKE RENTAL <span>· DEMO</span></div>
+        <section class="demo-panel" aria-labelledby="completed-title">
+            <p class="demo-kicker">MÔ PHỎNG — KHÔNG CHUYỂN TIỀN THẬT</p>
+            <h1 id="completed-title">Đã hoàn tất bước xác nhận DEMO</h1>
+            <div class="demo-result demo-result-success" role="status">
+                Bạn đã rời trang xác nhận giao dịch thử nghiệm.
+                Kết quả thanh toán chính thức trong hệ thống được thể hiện tại chi tiết đơn thuê.
+            </div>
+            <p class="demo-muted">
+                Nếu bạn quét QR bằng điện thoại, hãy quay lại trang đơn thuê trên máy tính.
+                Trang đó sẽ tự cập nhật trạng thái thanh toán.
+            </p>
+            <nav class="demo-actions" aria-label="Điều hướng sau xác nhận">
+                @if (User.IsInRole("Customer"))
+                {
+                    <a class="demo-btn demo-btn-primary demo-btn-link" href="/RentalOrder/MyOrders">Xem các đơn thuê của tôi</a>
+                }
+                else
+                {
+                    <a class="demo-btn demo-btn-secondary demo-btn-link" href="/">Về trang chủ</a>
+                }
+            </nav>
+            <p class="demo-footnote">Đây là màn hình hướng dẫn trong chế độ DEMO, không phải biên lai xác nhận giao dịch ngân hàng.</p>
+        </section>
+    </main>
+</body>
+</html>

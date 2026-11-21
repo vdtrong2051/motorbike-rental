@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using RentalPlatform.Models.Entities;
+using RentalPlatform.Services.Lifecycle;
 
 namespace RentalPlatform.Models.ViewModels.RentalOrder;
 
@@ -36,11 +37,11 @@ public class CheckoutItemInput
 
     [Required(ErrorMessage = "Vui lòng chọn thời gian nhận xe.")]
     [Display(Name = "Thời gian nhận xe")]
-    public DateTime NgayNhanXe { get; set; } = DateTime.Today.AddDays(1).AddHours(8);
+    public DateTime NgayNhanXe { get; set; } = RentalLifecyclePolicy.VietnamNow().Date.AddDays(1).AddHours(8);
 
     [Required(ErrorMessage = "Vui lòng chọn thời gian trả xe.")]
     [Display(Name = "Thời gian trả xe")]
-    public DateTime NgayTraXe { get; set; } = DateTime.Today.AddDays(2).AddHours(8);
+    public DateTime NgayTraXe { get; set; } = RentalLifecyclePolicy.VietnamNow().Date.AddDays(2).AddHours(8);
 }
 
 public class CheckoutViewModel

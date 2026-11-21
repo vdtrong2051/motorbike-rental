@@ -16,6 +16,7 @@
 <body>
     <main class="demo-shell" data-gd2-demo data-valid="@(Model.IsValid ? "true" : "false")"
           data-payment-token="@Model.Token" data-payment-submit="/api/payments/demo/complete"
+          data-completed-url="@Url.Action("Completed", "PaymentDemo")" data-return-url="@Model.ReturnUrl"
           data-expires-at="@Model.ExpiresAtUtc.ToString("O")">
         <div class="demo-brand">MOTORBIKE RENTAL <span>· DEMO</span></div>
         <section class="demo-panel" aria-labelledby="demo-title">
