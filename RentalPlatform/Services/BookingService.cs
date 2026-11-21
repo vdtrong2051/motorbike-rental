@@ -5,6 +5,7 @@ using RentalPlatform.Data;
 using RentalPlatform.Services.Availability;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using RentalPlatform.Services.Lifecycle;
 
 namespace RentalPlatform.Services;
 
@@ -52,7 +53,7 @@ public class BookingService : IBookingService
         if (model.NgayKetThuc <= model.NgayBatDau)
             return BookingOperationResult.Fail("Ngày trả xe phải sau ngày nhận xe.");
 
-        if (model.NgayBatDau < DateOnly.FromDateTime(DateTime.Today))
+        if (model.NgayBatDau < DateOnly.FromDateTime(RentalLifecyclePolicy.VietnamNow()))
             return BookingOperationResult.Fail("Ngày nhận xe không được ở trong quá khứ.");
 
         var vehicle = await _vehicleRepository.GetByIdAsync(model.VehicleId, includeImages: false);
@@ -116,64 +117,74 @@ public class BookingService : IBookingService
 
     public async Task<BookingOperationResult> HuyAsync(Guid bookingId, Guid currentUserId, string? lyDo)
     {
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
         var booking = await _bookingRepository.GetByIdAsync(bookingId);
         if (booking is null) return BookingOperationResult.Fail("Không tìm thấy đơn đặt xe.");
-
-        var laKhach = booking.CustomerId == currentUserId;
-        var laChuXe = booking.Vehicle.OwnerId == currentUserId;
-        if (!laKhach && !laChuXe) return BookingOperationResult.Fail("Bạn không có quyền huỷ đơn này.");
-
+        if (booking.CustomerId != currentUserId && booking.Vehicle.OwnerId != currentUserId)
+            return BookingOperationResult.Fail("Bạn không có quyền huỷ đơn này.");
+        await _availability.LockVehiclesAsync(new[] { booking.VehicleId });
+        await _db.Entry(booking).ReloadAsync();
         if (booking.TrangThai is not (TrangThaiBooking.ChoXacNhan or TrangThaiBooking.DaXacNhan))
             return BookingOperationResult.Fail("Đơn ở trạng thái hiện tại không thể huỷ.");
-
+        // Legacy Booking has no general refund workflow. Do not release an already-paid
+        // reservation and strand the customer's successful payment.
+        if (await _paymentRepository.GetTongDaThanhToanAsync(booking.Id) > 0)
+            return BookingOperationResult.Fail("Đơn đã thanh toán; vui lòng xử lý hoàn tiền với quản trị viên trước khi huỷ.");
         booking.TrangThai = TrangThaiBooking.DaHuy;
-        booking.LyDoHuy = lyDo;
+        booking.LyDoHuy = string.IsNullOrWhiteSpace(lyDo) ? null : lyDo.Trim()[..Math.Min(lyDo.Trim().Length, 300)];
         booking.UpdatedAt = DateTime.UtcNow;
-        await _bookingRepository.UpdateAsync(booking);
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return BookingOperationResult.Ok(booking);
     }
 
     public async Task<BookingOperationResult> XacNhanGiaoXeAsync(Guid bookingId, Guid ownerId)
     {
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
         var booking = await _bookingRepository.GetByIdAsync(bookingId);
         if (booking is null) return BookingOperationResult.Fail("Không tìm thấy đơn đặt xe.");
-        if (booking.Vehicle.OwnerId != ownerId) return BookingOperationResult.Fail("Bạn không có quyền giao xe cho đơn này.");
-        if (booking.TrangThai != TrangThaiBooking.DaXacNhan)
-            return BookingOperationResult.Fail("Đơn phải ở trạng thái đã xác nhận mới có thể giao xe.");
-
-        var contract = booking.Contract;
-        if (contract is null || !contract.DaKyKhach || !contract.DaKyChuXe)
-            return BookingOperationResult.Fail("Cả hai bên cần ký hợp đồng điện tử trước khi giao xe.");
-
-        var daThanhToan = await _paymentRepository.GetTongDaThanhToanAsync(booking.Id);
-        if (daThanhToan < booking.TongTien)
-            return BookingOperationResult.Fail($"Khách hàng chưa thanh toán đủ (đã thanh toán {daThanhToan:N0} đ / {booking.TongTien:N0} đ).");
-
+        if (booking.Vehicle.OwnerId != ownerId)
+            return BookingOperationResult.Fail("Bạn không có quyền giao xe cho đơn này.");
+        await _availability.LockVehiclesAsync(new[] { booking.VehicleId });
+        await _db.Entry(booking).ReloadAsync();
+        await _db.Entry(booking.Vehicle).ReloadAsync();
+        var error = RentalLifecyclePolicy.ValidateLegacyHandover(booking, RentalLifecyclePolicy.VietnamNow());
+        if (error is not null) return BookingOperationResult.Fail(error);
+        if (booking.Vehicle.TrangThai != TrangThaiXe.SanSang)
+            return BookingOperationResult.Fail("Xe chưa sẵn sàng bàn giao thực tế.");
+        if (await ActiveRentalGuard.HasOtherActiveRentalAsync(_db, booking.VehicleId, excludeBookingId: booking.Id))
+            return BookingOperationResult.Fail("Xe đang được bàn giao cho một đơn khác.");
+        var paid = await _paymentRepository.GetTongDaThanhToanAsync(booking.Id);
+        if (paid < booking.TongTien)
+            return BookingOperationResult.Fail($"Khách hàng chưa thanh toán đủ (đã thanh toán {paid:N0} đ / {booking.TongTien:N0} đ).");
         booking.TrangThai = TrangThaiBooking.DangThue;
-        booking.UpdatedAt = DateTime.UtcNow;
-        await _bookingRepository.UpdateAsync(booking);
-
         booking.Vehicle.TrangThai = TrangThaiXe.DangThue;
-        await _vehicleRepository.UpdateAsync(booking.Vehicle);
-
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return BookingOperationResult.Ok(booking);
     }
 
     public async Task<BookingOperationResult> XacNhanTraXeAsync(Guid bookingId, Guid ownerId)
     {
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
         var booking = await _bookingRepository.GetByIdAsync(bookingId);
         if (booking is null) return BookingOperationResult.Fail("Không tìm thấy đơn đặt xe.");
-        if (booking.Vehicle.OwnerId != ownerId) return BookingOperationResult.Fail("Bạn không có quyền nhận lại xe cho đơn này.");
+        if (booking.Vehicle.OwnerId != ownerId)
+            return BookingOperationResult.Fail("Bạn không có quyền nhận lại xe cho đơn này.");
+        await _availability.LockVehiclesAsync(new[] { booking.VehicleId });
+        await _db.Entry(booking).ReloadAsync();
+        await _db.Entry(booking.Vehicle).ReloadAsync();
         if (booking.TrangThai != TrangThaiBooking.DangThue)
             return BookingOperationResult.Fail("Đơn phải ở trạng thái đang thuê mới có thể xác nhận trả xe.");
-
         booking.TrangThai = TrangThaiBooking.HoanThanh;
         booking.UpdatedAt = DateTime.UtcNow;
-        await _bookingRepository.UpdateAsync(booking);
-
-        booking.Vehicle.TrangThai = TrangThaiXe.SanSang;
-        await _vehicleRepository.UpdateAsync(booking.Vehicle);
-
+        var otherActive = await ActiveRentalGuard.HasOtherActiveRentalAsync(_db, booking.VehicleId,
+            excludeBookingId: booking.Id);
+        if (RentalLifecyclePolicy.CanRestoreVehicleAvailability(booking.Vehicle.TrangThai, otherActive))
+            booking.Vehicle.TrangThai = TrangThaiXe.SanSang;
+        await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return BookingOperationResult.Ok(booking);
     }
 

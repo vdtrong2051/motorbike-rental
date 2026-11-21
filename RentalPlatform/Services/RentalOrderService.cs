@@ -6,6 +6,7 @@ using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.RentalOrder;
 using RentalPlatform.Services.Payments;
 using RentalPlatform.Services.Availability;
+using RentalPlatform.Services.Lifecycle;
 
 namespace RentalPlatform.Services;
 
@@ -95,7 +96,7 @@ public class RentalOrderService : IRentalOrderService
 
         foreach (var item in model.Items)
         {
-            if (item.NgayNhanXe < DateTime.Now.AddMinutes(-5))
+            if (item.NgayNhanXe < RentalLifecyclePolicy.VietnamNow().AddMinutes(-5))
                 return new(false, $"Thời gian nhận xe {item.TenXe} phải ở tương lai.");
             if (item.NgayTraXe <= item.NgayNhanXe)
                 return new(false, $"Thời gian trả xe {item.TenXe} phải sau thời gian nhận.");
@@ -222,12 +223,12 @@ public class RentalOrderService : IRentalOrderService
         var order = await PaymentCore.LockOrderAsync(_db, id);
         if (order is null || (order.CustomerId != currentUserId && order.OwnerId != currentUserId))
             return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
-        if (order.TrangThai is TrangThaiDonThue.DangThue or TrangThaiDonThue.HoanThanh or TrangThaiDonThue.DaHuy)
+        if (!RentalLifecyclePolicy.CanCancel(order.TrangThai))
             return new(false, "Không thể huỷ đơn ở trạng thái hiện tại.");
         if (order.TrangThaiThanhToan == TrangThaiThanhToanDon.DaThanhToan)
         {
             var cancellationPolicy = await _db.SystemPolicies.AsNoTracking().FirstOrDefaultAsync(p => p.Id == 1) ?? new SystemPolicy();
-            var hoursBeforePickup = (order.Items.Min(i => i.NgayNhanXe) - DateTime.Now).TotalHours;
+            var hoursBeforePickup = (order.Items.Min(i => i.NgayNhanXe) - RentalLifecyclePolicy.VietnamNow()).TotalHours;
             order.TyLeHoanTien = hoursBeforePickup >= 72 ? cancellationPolicy.HoanTienTruoc72Gio
                 : hoursBeforePickup >= 24 ? cancellationPolicy.HoanTienTruoc24Gio : cancellationPolicy.HoanTienTrong24Gio;
             order.SoTienHoanDuKien = Math.Round(order.TongTien * order.TyLeHoanTien / 100, 0);
@@ -241,9 +242,11 @@ public class RentalOrderService : IRentalOrderService
             payment.GhiChuCongThanhToan = "GD1:CANCELLED";
         }
         order.TrangThai = TrangThaiDonThue.DaHuy;
-        order.LyDoHuy = reason?.Trim();
+        var cleanReason = reason?.Trim();
+        order.LyDoHuy = string.IsNullOrWhiteSpace(cleanReason) ? null : cleanReason[..Math.Min(cleanReason.Length, 500)];
         order.CancelledAt = DateTime.UtcNow;
-        order.GhiChu = string.Join(Environment.NewLine, new[] { order.GhiChu, $"Lý do huỷ: {reason}" }.Where(s => !string.IsNullOrWhiteSpace(s)));
+        // Keep the pre-existing note untouched: GhiChu is capped at 500 chars in MySQL.
+        // The cancellation reason has its own persistent field (LyDoHuy).
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
         await tx.CommitAsync();
@@ -252,10 +255,13 @@ public class RentalOrderService : IRentalOrderService
 
     public async Task<RentalOrderOperationResult> SignContractAsync(Guid id, Guid currentUserId)
     {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
+        // Same order row lock as PaymentCore; prevents late signatures and double clicks.
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        var order = await PaymentCore.LockOrderAsync(_db, id);
         if (order?.Contract is null || (order.CustomerId != currentUserId && order.OwnerId != currentUserId))
             return new(false, "Không tìm thấy hợp đồng hoặc bạn không có quyền.");
-        if (order.TrangThai == TrangThaiDonThue.DaHuy) return new(false, "Đơn đã huỷ.");
+        if (!RentalLifecyclePolicy.CanSignContract(order.TrangThai))
+            return new(false, "Chỉ có thể ký hợp đồng sau khi chủ xe xác nhận và trước khi giao xe.");
 
         if (order.CustomerId == currentUserId)
         {
@@ -269,7 +275,9 @@ public class RentalOrderService : IRentalOrderService
             order.Contract.DaKyChuXe = true;
             order.Contract.NgayKyChuXe = DateTime.UtcNow;
         }
+        order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return new(true, Order: order);
     }
 
@@ -294,27 +302,67 @@ public class RentalOrderService : IRentalOrderService
 
     public async Task<RentalOrderOperationResult> HandOverAsync(Guid id, Guid ownerId)
     {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
-        if (order is null || order.OwnerId != ownerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
-        if (order.TrangThai != TrangThaiDonThue.DaThanhToan
-            || order.TrangThaiThanhToan != TrangThaiThanhToanDon.DaThanhToan)
-            return new(false, "Đơn phải ở trạng thái đã thanh toán trước khi giao xe.");
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        // Discover IDs without tracking. Acquire vehicle locks in stable order BEFORE the
+        // order lock, matching GD5-B's reservation path and avoiding lock-order inversion.
+        var ids = await _db.RentalOrderItems.AsNoTracking()
+            .Where(i => i.RentalOrderId == id && i.RentalOrder.OwnerId == ownerId)
+            .Select(i => i.VehicleId).Distinct().ToListAsync();
+        if (ids.Count == 0) return new(false, "Không tìm thấy đơn có xe hoặc bạn không có quyền.");
+        await _availability.LockVehiclesAsync(ids);
+        var order = await PaymentCore.LockOrderAsync(_db, id);
+        if (order is null || order.OwnerId != ownerId)
+            return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
+        var handoverError = RentalLifecyclePolicy.ValidateHandover(order, RentalLifecyclePolicy.VietnamNow());
+        if (handoverError is not null) return new(false, handoverError);
+        if (!RentalLifecyclePolicy.FinancialBreakdownMatches(order))
+            return new(false, "Tổng tiền đơn không khớp các thành phần chi phí. Vui lòng kiểm tra đối soát.");
+        if (!order.Payments.Any(p => p.TrangThai == TrangThaiThanhToanDon.DaThanhToan
+            && p.MaGiaoDich == order.MaThamChieuThanhToan && p.SoTien == order.TongTien))
+            return new(false, "Chưa tìm thấy chứng từ thanh toán thành công khớp tổng tiền.");
+        var vehicles = await _db.Vehicles.Where(v => ids.Contains(v.Id)).ToListAsync();
+        if (vehicles.Count != ids.Count || vehicles.Any(v => v.TrangThai != TrangThaiXe.SanSang))
+            return new(false, "Có xe chưa sẵn sàng bàn giao thực tế. Vui lòng kiểm tra tình trạng xe.");
+        foreach (var vehicle in vehicles)
+            if (await ActiveRentalGuard.HasOtherActiveRentalAsync(_db, vehicle.Id, excludeRentalOrderId: id))
+                return new(false, $"{vehicle.TenXe} đang được bàn giao cho một đơn khác.");
+
         order.TrangThai = TrangThaiDonThue.DangThue;
-        foreach (var item in order.Items) item.Vehicle.TrangThai = TrangThaiXe.DangThue;
+        foreach (var vehicle in vehicles) vehicle.TrangThai = TrangThaiXe.DangThue;
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return new(true, Order: order);
     }
 
     public async Task<RentalOrderOperationResult> CompleteAsync(Guid id, Guid ownerId)
     {
-        var order = await OrderQuery().FirstOrDefaultAsync(o => o.Id == id);
-        if (order is null || order.OwnerId != ownerId) return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
-        if (order.TrangThai != TrangThaiDonThue.DangThue) return new(false, "Đơn chưa ở trạng thái đang thuê.");
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        var ids = await _db.RentalOrderItems.AsNoTracking()
+            .Where(i => i.RentalOrderId == id && i.RentalOrder.OwnerId == ownerId)
+            .Select(i => i.VehicleId).Distinct().ToListAsync();
+        if (ids.Count == 0) return new(false, "Không tìm thấy đơn có xe hoặc bạn không có quyền.");
+        await _availability.LockVehiclesAsync(ids);
+        var order = await PaymentCore.LockOrderAsync(_db, id);
+        if (order is null || order.OwnerId != ownerId)
+            return new(false, "Không tìm thấy đơn hoặc bạn không có quyền.");
+        if (order.TrangThai != TrangThaiDonThue.DangThue)
+            return new(false, "Đơn chưa ở trạng thái đang thuê hoặc đã được hoàn tất.");
+        var vehicles = await _db.Vehicles.Where(v => ids.Contains(v.Id)).ToListAsync();
+        if (vehicles.Count != ids.Count) return new(false, "Danh sách xe của đơn không còn đầy đủ.");
         order.TrangThai = TrangThaiDonThue.HoanThanh;
-        foreach (var item in order.Items) item.Vehicle.TrangThai = TrangThaiXe.SanSang;
+        foreach (var vehicle in vehicles)
+        {
+            // A vehicle in maintenance must not be silently restored to available.
+            // Overdue or concurrent physical rentals across BOTH flows still hold it.
+            var otherActive = await ActiveRentalGuard.HasOtherActiveRentalAsync(_db, vehicle.Id,
+                excludeRentalOrderId: id);
+            if (RentalLifecyclePolicy.CanRestoreVehicleAvailability(vehicle.TrangThai, otherActive))
+                vehicle.TrangThai = TrangThaiXe.SanSang;
+        }
         order.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        await tx.CommitAsync();
         return new(true, Order: order);
     }
 
@@ -348,8 +396,8 @@ public class RentalOrderService : IRentalOrderService
 
     public async Task<List<RentalCalendarEventViewModel>> GetCalendarAsync(Guid ownerId, DateTime? from, DateTime? to)
     {
-        var start = from ?? DateTime.Today.AddMonths(-1);
-        var end = to ?? DateTime.Today.AddMonths(3);
+        var start = from ?? RentalLifecyclePolicy.VietnamNow().Date.AddMonths(-1);
+        var end = to ?? RentalLifecyclePolicy.VietnamNow().Date.AddMonths(3);
         return await _db.RentalOrderItems.AsNoTracking()
             .Where(i => i.RentalOrder.OwnerId == ownerId
                 && i.RentalOrder.TrangThai != TrangThaiDonThue.DaHuy
@@ -379,7 +427,7 @@ public class RentalOrderService : IRentalOrderService
         sb.AppendLine("Độc lập - Tự do - Hạnh phúc");
         sb.AppendLine();
         sb.AppendLine($"HỢP ĐỒNG THUÊ XE ĐIỆN TỬ SỐ {contractNumber}");
-        sb.AppendLine($"Mã đơn: {order.MaDon} · Ngày lập: {DateTime.Now:dd/MM/yyyy HH:mm}");
+        sb.AppendLine($"Mã đơn: {order.MaDon} · Ngày lập: {RentalLifecyclePolicy.VietnamNow():dd/MM/yyyy HH:mm}");
         sb.AppendLine();
         sb.AppendLine("BÊN CHO THUÊ (BÊN A)");
         sb.AppendLine($"Họ tên: {owner.HoTen}");
