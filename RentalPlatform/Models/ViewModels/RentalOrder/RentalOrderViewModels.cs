@@ -13,6 +13,8 @@ public class CartItemViewModel
     public string? AnhDaiDien { get; set; }
     public decimal GiaThueMotNgay { get; set; }
     public Guid OwnerId { get; set; }
+    public DateTime NgayNhanXe { get; set; }
+    public DateTime NgayTraXe { get; set; }
 }
 
 public class CartViewModel

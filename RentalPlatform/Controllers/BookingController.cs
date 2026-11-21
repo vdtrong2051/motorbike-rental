@@ -27,7 +27,7 @@ public class BookingController : Controller
     {
         var vehicle = await _vehicleService.GetDetailAsync(vehicleId);
         if (vehicle is null) return NotFound();
-        if (vehicle.TrangThai != Models.Entities.TrangThaiXe.SanSang)
+        if (vehicle.TrangThai is not (Models.Entities.TrangThaiXe.SanSang or Models.Entities.TrangThaiXe.DangThue))
         {
             TempData["ErrorMessage"] = "Xe hiện không sẵn sàng cho thuê.";
             return RedirectToAction("Details", "Vehicle", new { id = vehicleId });
@@ -48,7 +48,14 @@ public class BookingController : Controller
             return View(model);
         }
 
-        var result = await _bookingService.CreateAsync(model, GetCurrentUserId());
+        BookingOperationResult result;
+        try { result = await _bookingService.CreateAsync(model, GetCurrentUserId()); }
+        catch (MySql.Data.MySqlClient.MySqlException ex) when (ex.Number is 1205 or 1213)
+        {
+            ModelState.AddModelError(string.Empty, "Lịch xe vừa được người khác cập nhật. Vui lòng thử lại.");
+            ViewBag.Vehicle = await _vehicleService.GetDetailAsync(model.VehicleId);
+            return View(model);
+        }
         if (!result.Success)
         {
             ModelState.AddModelError(string.Empty, result.Error!);

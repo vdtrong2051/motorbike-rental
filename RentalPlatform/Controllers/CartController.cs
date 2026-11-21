@@ -16,14 +16,25 @@ public class CartController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Add(Guid vehicleId, string? returnUrl = null)
+    public async Task<IActionResult> Add(Guid vehicleId, DateTime? ngayNhanXe = null,
+        DateTime? ngayTraXe = null, string? returnUrl = null)
     {
-        var result = await _cart.AddAsync(vehicleId);
+        var result = await _cart.AddAsync(vehicleId, ngayNhanXe, ngayTraXe);
         TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
             ? "Đã thêm xe vào giỏ hàng."
             : result.Error;
         if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             return LocalRedirect(returnUrl);
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateDates(Guid vehicleId, DateTime ngayNhanXe, DateTime ngayTraXe)
+    {
+        var result = await _cart.UpdateDatesAsync(vehicleId, ngayNhanXe, ngayTraXe);
+        TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] =
+            result.Success ? "Đã cập nhật thời gian thuê xe." : result.Error;
         return RedirectToAction(nameof(Index));
     }
 

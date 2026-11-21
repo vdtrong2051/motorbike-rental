@@ -42,7 +42,7 @@ public class BookingRepository : IBookingRepository
         // Hai khoảng ngày [A,B] và [C,D] giao nhau khi A <= D và C <= B
         return await _db.Bookings
             .Where(b => b.VehicleId == vehicleId
-                && (b.TrangThai == TrangThaiBooking.DaXacNhan || b.TrangThai == TrangThaiBooking.DangThue)
+                && b.TrangThai != TrangThaiBooking.DaHuy
                 && (loaiTruBookingId == null || b.Id != loaiTruBookingId)
                 && b.NgayBatDau <= denNgay
                 && tuNgay <= b.NgayKetThuc)

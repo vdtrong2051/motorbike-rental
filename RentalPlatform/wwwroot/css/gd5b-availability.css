@@ -1,0 +1,11 @@
+/* GD5-B public availability UI; isolated from GD5-A badges. */
+.gd5b-availability { margin:1.1rem 0; padding:1.1rem; border:1px solid #c7dbd3; border-radius:14px; background:#f7fbf9; }
+.gd5b-availability h3 { font-size:1.12rem; font-weight:800; margin-bottom:.5rem; }
+.gd5b-availability .form-label { font-size:.84rem; font-weight:700; }
+.gd5b-calendar { min-height:260px; margin-top:1rem; background:white; border:1px solid #dae7e2; border-radius:12px; padding:.8rem; }
+.gd5b-calendar .fc .fc-button-primary { background:#1f6f52; border-color:#1f6f52; }
+.gd5b-cart-dates { margin-top:1rem; padding-top:.8rem; border-top:1px solid #e2ebe7; }
+.gd5b-cart-dates .form-control { min-width:0; }
+.gd5b-cart-dates label { font-weight:600; font-size:.79rem; }
+.gd5b-event-help { font-size:.8rem; color:#506d65; }
+@media(max-width:575.98px){ .gd5b-calendar { padding:.3rem; } .gd5b-calendar .fc-toolbar { flex-wrap:wrap; gap:.4rem; } .gd5b-calendar .fc-toolbar-title { font-size:1.04rem; } }

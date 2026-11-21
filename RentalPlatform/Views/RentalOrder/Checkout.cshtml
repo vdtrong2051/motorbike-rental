@@ -8,7 +8,7 @@
     <span class="done">1. Giỏ xe</span><span class="active">2. Thông tin thuê</span><span>3. Xác nhận &amp; thanh toán</span>
 </div>
 
-<form asp-action="Checkout" method="post">
+<form asp-action="Checkout" method="post" id="gd5b-checkout-form" data-availability-url="@Url.Action("CheckAvailability", "Vehicle")">
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
     <div class="row g-4">
         <div class="col-lg-5">
@@ -60,7 +60,7 @@
             <h3 class="mb-3">Xe và thời gian thuê</h3>
             @for (var i = 0; i < Model.Items.Count; i++)
             {
-                <div class="card mb-3 checkout-item" data-price="@Model.Items[i].GiaThueMotNgay">
+                <div class="card mb-3 checkout-item" data-price="@Model.Items[i].GiaThueMotNgay" data-vehicle-id="@Model.Items[i].VehicleId">
                     <div class="card-body">
                         <input asp-for="Items[i].VehicleId" type="hidden" />
                         <input asp-for="Items[i].TenXe" type="hidden" />
@@ -91,6 +91,7 @@
                                 <span asp-validation-for="Items[i].NgayTraXe" class="text-danger"></span>
                             </div>
                         </div>
+                        <div class="gd5b-check-message small text-muted mt-2" role="status" aria-live="polite">Đang kiểm tra lịch...</div>
                         <div class="d-flex justify-content-between mt-3 pt-3 border-top">
                             <span>@Model.Items[i].GiaThueMotNgay.ToString("N0") đ/ngày</span>
                             <strong class="price-tag item-total">—</strong>
@@ -132,4 +133,5 @@
         document.querySelectorAll('.rental-start,.rental-end').forEach(el => el.addEventListener('change', updateTotals));
         updateTotals();
     </script>
+    <script src="~/js/gd5b-checkout.js" asp-append-version="true"></script>
 }

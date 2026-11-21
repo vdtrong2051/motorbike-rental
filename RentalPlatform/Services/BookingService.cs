@@ -1,6 +1,10 @@
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.Booking;
 using RentalPlatform.Repositories;
+using RentalPlatform.Data;
+using RentalPlatform.Services.Availability;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace RentalPlatform.Services;
 
@@ -10,23 +14,31 @@ public class BookingService : IBookingService
     private readonly IVehicleRepository _vehicleRepository;
     private readonly IContractService _contractService;
     private readonly IPaymentRepository _paymentRepository;
+    private readonly AppDbContext _db;
+    private readonly IVehicleAvailabilityService _availability;
 
     public BookingService(
         IBookingRepository bookingRepository,
         IVehicleRepository vehicleRepository,
         IContractService contractService,
-        IPaymentRepository paymentRepository)
+        IPaymentRepository paymentRepository,
+        AppDbContext db,
+        IVehicleAvailabilityService availability)
     {
         _bookingRepository = bookingRepository;
         _vehicleRepository = vehicleRepository;
         _contractService = contractService;
         _paymentRepository = paymentRepository;
+        _db = db;
+        _availability = availability;
     }
 
     public async Task<bool> KiemTraConTrongAsync(Guid vehicleId, DateOnly tuNgay, DateOnly denNgay, Guid? loaiTruBookingId = null)
     {
-        var trung = await _bookingRepository.GetOverlappingAsync(vehicleId, tuNgay, denNgay, loaiTruBookingId);
-        return trung.Count == 0;
+        if (denNgay <= tuNgay) return false;
+        var window = AvailabilityWindow.FromLegacy(tuNgay, denNgay);
+        return !await _availability.IsBusyAsync(vehicleId, window.Start, window.End,
+            excludedBookingId: loaiTruBookingId);
     }
 
     public decimal TinhTongTien(decimal giaMotNgay, DateOnly ngayBatDau, DateOnly ngayKetThuc)
@@ -49,8 +61,11 @@ public class BookingService : IBookingService
         if (vehicle.OwnerId == customerId)
             return BookingOperationResult.Fail("Bạn không thể tự đặt xe của chính mình.");
 
-        if (vehicle.TrangThai != TrangThaiXe.SanSang)
-            return BookingOperationResult.Fail("Xe hiện không sẵn sàng cho thuê.");
+        await using var transaction = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _availability.LockVehiclesAsync(new[] { vehicle.Id });
+        await _db.Entry(vehicle).ReloadAsync();
+        if (!VehicleAvailabilityService.IsOperatingState(vehicle.TrangThai))
+            return BookingOperationResult.Fail("Xe hiện không được phép cho thuê.");
 
         var conTrong = await KiemTraConTrongAsync(vehicle.Id, model.NgayBatDau, model.NgayKetThuc);
         if (!conTrong)
@@ -69,6 +84,7 @@ public class BookingService : IBookingService
         };
 
         booking = await _bookingRepository.AddAsync(booking);
+        await transaction.CommitAsync();
         return BookingOperationResult.Ok(booking);
     }
 
@@ -80,8 +96,12 @@ public class BookingService : IBookingService
         if (booking.TrangThai != TrangThaiBooking.ChoXacNhan)
             return BookingOperationResult.Fail("Đơn này không ở trạng thái chờ xác nhận.");
 
-        // Kiểm tra lại trùng lịch tại thời điểm xác nhận: có thể trong lúc đơn này còn
-        // ChoXacNhan, một đơn khác của cùng xe (khoảng ngày giao nhau) đã được xác nhận trước.
+        // Recheck all order sources while holding the same vehicle lock as checkout.
+        await using var confirmTx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _availability.LockVehiclesAsync(new[] { booking.VehicleId });
+        await _db.Entry(booking).ReloadAsync();
+        if (booking.TrangThai != TrangThaiBooking.ChoXacNhan)
+            return BookingOperationResult.Fail("Đơn không còn ở trạng thái chờ xác nhận.");
         var conTrong = await KiemTraConTrongAsync(booking.VehicleId, booking.NgayBatDau, booking.NgayKetThuc, booking.Id);
         if (!conTrong)
             return BookingOperationResult.Fail("Khoảng ngày này đã bị một đơn khác chiếm lịch trước. Vui lòng từ chối đơn này cho khách.");
@@ -89,9 +109,8 @@ public class BookingService : IBookingService
         booking.TrangThai = TrangThaiBooking.DaXacNhan;
         booking.UpdatedAt = DateTime.UtcNow;
         await _bookingRepository.UpdateAsync(booking);
-
         await _contractService.TaoHopDongNeuChuaCoAsync(booking.Id);
-
+        await confirmTx.CommitAsync();
         return BookingOperationResult.Ok(booking);
     }
 

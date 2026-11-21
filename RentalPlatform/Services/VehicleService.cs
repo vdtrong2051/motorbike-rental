@@ -3,6 +3,8 @@ using RentalPlatform.Data;
 using RentalPlatform.Models.Entities;
 using RentalPlatform.Models.ViewModels.Vehicle;
 using RentalPlatform.Repositories;
+using RentalPlatform.Services.Availability;
+using System.Data;
 
 namespace RentalPlatform.Services;
 
@@ -10,11 +12,14 @@ public class VehicleService : IVehicleService
 {
     private readonly IVehicleRepository _repository;
     private readonly AppDbContext _db;
+    private readonly IVehicleAvailabilityService _availability;
 
-    public VehicleService(IVehicleRepository repository, AppDbContext db)
+    public VehicleService(IVehicleRepository repository, AppDbContext db,
+        IVehicleAvailabilityService availability)
     {
         _repository = repository;
         _db = db;
+        _availability = availability;
     }
 
     public async Task<VehicleOperationResult> CreateAsync(VehicleCreateViewModel model, Guid ownerId)
@@ -138,6 +143,8 @@ public class VehicleService : IVehicleService
         if (newStatus is not (TrangThaiXe.SanSang or TrangThaiXe.BaoTri))
             return VehicleOperationResult.Fail("Owner chỉ được chuyển trạng thái Sẵn sàng hoặc Bảo trì.");
 
+        await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        await _availability.LockVehiclesAsync(new[] { vehicleId });
         var vehicle = await _repository.GetByIdAsync(vehicleId, includeImages: false);
         if (vehicle is null) return VehicleOperationResult.Fail("Không tìm thấy xe.");
         if (vehicle.OwnerId != currentUserId) return VehicleOperationResult.Fail("Bạn không có quyền thao tác trên xe này.");
@@ -146,8 +153,20 @@ public class VehicleService : IVehicleService
         if (vehicle.TrangThai is TrangThaiXe.ChoDuyet or TrangThaiXe.TuChoi)
             return VehicleOperationResult.Fail("Xe chưa được Admin duyệt nên chưa thể chuyển trạng thái hoạt động.");
 
+        if (newStatus == TrangThaiXe.BaoTri)
+        {
+            var now = DateTime.Now;
+            var today = DateOnly.FromDateTime(now);
+            var reserved = await _db.Bookings.AnyAsync(b => b.VehicleId == vehicleId
+                    && b.TrangThai != TrangThaiBooking.DaHuy && b.NgayKetThuc >= today)
+                || await _db.RentalOrderItems.AnyAsync(i => i.VehicleId == vehicleId
+                    && i.RentalOrder.TrangThai != TrangThaiDonThue.DaHuy && i.NgayTraXe > now);
+            if (reserved)
+                return VehicleOperationResult.Fail("Xe đang có lịch thuê chưa kết thúc, không thể chuyển sang bảo trì.");
+        }
         vehicle.TrangThai = newStatus;
         await _repository.UpdateAsync(vehicle);
+        await tx.CommitAsync();
         return VehicleOperationResult.Ok(vehicle);
     }
 
